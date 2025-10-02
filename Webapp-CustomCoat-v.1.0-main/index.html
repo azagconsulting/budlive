@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="de">
   <head>
     <meta charset="utf-8" />
@@ -10,6 +10,11 @@
     <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/uicons-solid-rounded/css/uicons-solid-rounded.css">
   </head>
   <body class="with-sidebar">
+    <div class="ambient-orbs" aria-hidden="true">
+      <span class="orb"></span>
+      <span class="orb"></span>
+      <span class="orb"></span>
+    </div>
     <header class="app-header">
       <div class="title-wrap">
         <span class="logo">dYOE?</span>
@@ -20,7 +25,7 @@
           <span id="grams">0.00 g</span>
         </div>
         <div class="stat-pill" title="Bargeld">
-          <span id="cash">EUR 0</span>
+          <span id="cash"><span class="coin-text"><img src="assets/coin.png" alt="" class="coin-icon"> 0</span></span>
         </div>
         <div class="stat-pill" title="Level / Erfahrung">
           <div style="display:flex;align-items:center;gap:8px;min-width:160px">
@@ -45,8 +50,8 @@
     </header>
     <div id="announceBar" class="announce" hidden></div>
 
-    <nav id="sidebar" class="sidebar" aria-label="Hauptmen1/4">
-      <button id="sidebarToggle" class="sidebar-toggle" aria-label="Men1/4 ein/aus">"</button>
+    <nav id="sidebar" class="sidebar" aria-label="HauptmenÃ¼">
+      <button id="sidebarToggle" class="sidebar-toggle" aria-label="MenÃ¼ ein/aus">"</button>
       <button class="tab-btn nav-btn active" data-tab="farm" title="Farm">
         <i class="ico fi fi-sr-leaf" aria-hidden="true"></i><span class="label">Farm</span>
       </button>
@@ -77,6 +82,12 @@
       <button class="tab-btn nav-btn" data-tab="stats" title="Statistiken">
         <i class="ico fi fi-sr-chart-line-up" aria-hidden="true"></i><span class="label">Statistiken</span>
       </button>
+      <button class="tab-btn nav-btn" data-tab="employees" title="Mitarbeiter">
+        <i class="ico fi fi-sr-users" aria-hidden="true"></i><span class="label">Mitarbeiter</span>
+      </button>
+      <button class="tab-btn nav-btn" data-tab="breeding" title="Kreuzung">
+        <i class="ico fi fi-sr-flask" aria-hidden="true"></i><span class="label">Kreuzung</span>
+      </button>
       <button class="tab-btn nav-btn" data-tab="settings" title="Einstellungen">
         <i class="ico fi fi-sr-settings" aria-hidden="true"></i><span class="label">Einstellungen</span>
       </button>
@@ -103,7 +114,7 @@
           <div class="panel-header">
             <h2>dYOE+/- Grow Room</h2>
             <div class="grow-controls">
-              <span class="hint">PlEURtze: <span id="slotCount">0</span>/<span id="slotMax">0</span> * Erweitere deinen Raum im Tab Immobilien</span>
+              <span class="hint">PlÃ¤tze: <span id="slotCount">0</span>/<span id="slotMax">0</span> * Erweitere deinen Raum im Tab Immobilien</span>
             </div>
           </div>
           <div id="slots" class="slots"></div>
@@ -113,61 +124,26 @@
       <section id="tab-trade" class="tab">
         <div class="panel">
           <div class="panel-header">
-            <h2>SamenEUR'Shop</h2>
-            <span class="hint">Kaufe Seeds und setze sie in freie Slots</span>
+            <h2>?? Growmarkt</h2>
+            <div class="shop-header-actions">
+              <div class="shop-tabs">
+                <button class="shop-tab active" data-shop-tab="seeds">?? Samen</button>
+                <button class="shop-tab" data-shop-tab="tools">?? Werkzeuge</button>
+                <button class="shop-tab" data-shop-tab="equipment">?? Ausr�stung</button>
+                <button class="shop-tab" data-shop-tab="consumables">?? Verbrauchsmaterial</button>
+              </div>
+              <button id="cartToggle" class="shop-cart-button" type="button" aria-haspopup="dialog" aria-expanded="false" aria-controls="cartModal">
+                <i class="fi fi-rr-shopping-cart"></i>
+                <span>Warenkorb</span>
+                <span id="cartCount" class="cart-count">0</span>
+              </button>
+            </div>
           </div>
-          <div id="shop" class="shop-list"></div>
-        </div>
-
-        <div class="panel">
-          <div class="panel-header">
-            <h2>ArtikelEUR'Shop</h2>
-            <span class="hint">Kaufe Ausr1/4stung mit Bargeld</span>
-          </div>
-          <div id="itemShop" class="shop-list"></div>
-        </div>
-
-        <div class="panel">
-          <div class="panel-header">
-            <h2>Verbrauchsmaterial</h2>
-            <span class="hint">Wasser &amp; D1/4nger nachf1/4llen</span>
-          </div>
-          <div class="consumable-list">
-            <div class="consumable">
-              <div class="consumable-info">
-                <div class="consumable-name">Wasserkanister</div>
-                <div class="consumable-desc">F1/4llt eine Pflanze vollstEURndig * Bestand: <span id="waterCharges">0</span></div>
-              </div>
-              <button class="secondary" id="buyWater">Kaufen (EUR 5)</button>
-            </div>
-            <div class="consumable">
-              <div class="consumable-info">
-                <div class="consumable-name">D1/4ngerpaket</div>
-                <div class="consumable-desc">Hebt Qualitaet leicht * Bestand: <span id="nutrientCharges">0</span></div>
-              </div>
-              <button class="secondary" id="buyNutrient">Kaufen (EUR 7)</button>
-            </div>
-            <div class="consumable">
-              <div class="consumable-info">
-                <div class="consumable-name">Pflanzenspray</div>
-                <div class="consumable-desc">Gegen Milben/Thripse * Bestand: <span id="sprayCharges">0</span></div>
-              </div>
-              <button class="secondary" id="buySpray">Kaufen (EUR 9)</button>
-            </div>
-            <div class="consumable">
-              <div class="consumable-info">
-                <div class="consumable-name">Fungizid</div>
-                <div class="consumable-desc">Gegen Schimmel * Bestand: <span id="fungicideCharges">0</span></div>
-              </div>
-              <button class="secondary" id="buyFungicide">Kaufen (EUR 11)</button>
-            </div>
-            <div class="consumable">
-              <div class="consumable-info">
-                <div class="consumable-name">N1/4tzlinge</div>
-                <div class="consumable-desc">Biologische Abwehr * Bestand: <span id="beneficialCharges">0</span></div>
-              </div>
-              <button class="secondary" id="buyBeneficial">Kaufen (EUR 14)</button>
-            </div>
+          <div id="shop" class="shop-list">
+            <div id="shop-seeds" class="shop-category active"></div>
+            <div id="shop-tools" class="shop-category"></div>
+            <div id="shop-equipment" class="shop-category"></div>
+            <div id="shop-consumables" class="shop-category"></div>
           </div>
         </div>
       </section>
@@ -176,14 +152,14 @@
         <div class="panel">
           <div class="panel-header">
             <h2>Handel</h2>
-            <span class="hint">Verkauf, AuftrEURge und Anfragen</span>
+            <span class="hint">Verkauf, AuftrÃ¤ge und Anfragen</span>
           </div>
           <div class="market">
             <div class="market-row">
-              <div>Basispreis: <strong id="basePrice">EUR 2.00/g</strong></div>
+              <div>Basispreis: <strong id="basePrice">--</strong></div>
               <div>Bonus: <strong id="saleMult">x1.00</strong></div>
               <div>Qualitaet: <strong id="qualityMult">x1.00</strong></div>
-              <div>Effektiver Preis: <strong id="effectivePrice">EUR 2.00/g</strong></div>
+              <div>Effektiver Preis: <strong id="effectivePrice">--</strong></div>
             </div>
             <div class="market-actions">
               <button id="sell10" class="secondary">10 g verkaufen</button>
@@ -195,7 +171,7 @@
 
         <div class="panel">
           <div class="panel-header">
-            <h2>NPCEUR'AuftrEURge</h2>
+            <h2>NPC-AuftrÃ¤ge</h2>
             <span class="hint">Spezielle Lieferanfragen mit Bonus</span>
           </div>
           <div id="ordersList" class="offer-list"></div>
@@ -216,7 +192,7 @@
             <h2>Jobs</h2>
             <span class="hint">Bewirb dich und verdiene monatlich Geld</span>
           </div>
-          <div id="jobsList" class="upgrade-list"></div>
+          <div id="jobsList" class="jobs-grid"></div>
         </div>
       </section>
 
@@ -226,7 +202,7 @@
             <h2>Nachrichten</h2>
             <span class="hint">Bewerbungen, Events und Systemmeldungen</span>
           </div>
-          <div id="messagesList" class="offer-list"></div>
+          <div id="messagesList" class="message-list"></div>
         </div>
       </section>
 
@@ -234,7 +210,7 @@
         <div class="panel">
           <div class="panel-header">
             <h2>Inventar</h2>
-            <span class="hint">Verwalte deine GegenstEURnde</span>
+            <span class="hint">Verwalte deine GegenstÃ¤nde</span>
           </div>
           <div id="inventoryList" class="inventory-list"></div>
         </div>
@@ -244,9 +220,9 @@
         <div class="panel">
           <div class="panel-header">
             <h2>Immobilienmakler</h2>
-            <span class="hint">Upgrade deinen GrowEUR'Raum</span>
+            <span class="hint">Upgrade deinen Grow-Raum</span>
           </div>
-          <div id="estateList" class="upgrade-list"></div>
+          <div id="estateList" class="estate-grid"></div>
         </div>
       </section>
 
@@ -262,15 +238,15 @@
         <div class="panel prestige">
           <div class="panel-header">
             <h2>dY"YEN Prestige</h2>
-            <span class="hint">Setzt die Farm zur1/4ck, erhEURlt HazeEUR'Punkte</span>
+            <span class="hint">Setzt die Farm zurÃ¼ck, erhÃ¤lt Haze-Punkte</span>
           </div>
           <div class="prestige-inner">
             <div class="prestige-stats">
-              <div>HazeEUR'Punkte: <strong id="prestigeOwned">0</strong></div>
-              <div>NEURchster Gewinn: <strong id="prestigeGain">0</strong></div>
+              <div>Haze-Punkte: <strong id="prestigeOwned">0</strong></div>
+              <div>NÃ¤chster Gewinn: <strong id="prestigeGain">0</strong></div>
               <div>Bonus: <strong id="prestigeBonus">x1.00</strong></div>
             </div>
-            <button id="prestigeBtn" class="Duenger">Reinvestieren (Zur1/4cksetzen)</button>
+            <button id="prestigeBtn" class="Duenger">Reinvestieren (ZurÃ¼cksetzen)</button>
           </div>
         </div>
       </section>
@@ -282,7 +258,7 @@
             <span class="hint">Baue deine Infrastruktur aus</span>
           </div>
           <div class="settings-row">
-            <div>Verf1/4gbare Punkte: <strong id="researchAvailable">0</strong></div>
+            <div>VerfÃ¼gbare Punkte: <strong id="researchAvailable">0</strong></div>
           </div>
           <div id="researchList" class="research-list"></div>
         </div>
@@ -295,7 +271,7 @@
           </div>
           <div class="stats-grid">
             <div class="stat">
-              <div class="label">LebenszeitEUR'Ertrag</div>
+              <div class="label">Lebenszeit-Ertrag</div>
               <div class="value" id="lifetimeTotal">0.00 g</div>
             </div>
             <div class="stat">
@@ -314,6 +290,48 @@
               <div class="label">Resets</div>
               <div class="value" id="resetCount">0</div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="tab-employees" class="tab">
+        <div class="panel">
+          <div class="panel-header">
+            <h2>Mitarbeiter</h2>
+            <span class="hint">Stelle Angestellte ein, um Aufgaben zu automatisieren</span>
+          </div>
+          <div id="employeesList" class="upgrade-list"></div>
+        </div>
+      </section>
+
+      <section id="tab-breeding" class="tab">
+        <div class="panel">
+          <div class="panel-header">
+            <h2>Kreuzungslabor</h2>
+            <span class="hint">Setze Samen in Slots und kreuze sie</span>
+          </div>
+          <div id="breedingInterface" class="breeding-interface">
+            <div class="breeding-selection">
+              <div class="breeding-parent" id="parent1Slot">
+                <h3>Elternteil 1</h3>
+                <div class="breeding-slot empty" data-parent="1">
+                  <div class="slot-label">Samen setzen</div>
+                </div>
+              </div>
+              <div class="breeding-cross">+</div>
+              <div class="breeding-parent" id="parent2Slot">
+                <h3>Elternteil 2</h3>
+                <div class="breeding-slot empty" data-parent="2">
+                  <div class="slot-label">Samen setzen</div>
+                </div>
+              </div>
+              <div class="breeding-arrow">→</div>
+              <div class="breeding-result" id="breedingResult">
+                <h3>Neue Sorte</h3>
+                <div id="resultPreview">Kreuze zwei Sorten</div>
+              </div>
+            </div>
+            <button id="breedBtn" class="accent" disabled>Kreuzen (kostenlos)</button>
           </div>
         </div>
       </section>
@@ -341,15 +359,75 @@
               </div>
             </div>
             <div class="settings-row small">
-              <div>Wachstum: <span id="diffGrowth">x1.00</span> * SchEURdling: <span id="diffPest">x1.00</span></div>
+              <div>Wachstum: <span id="diffGrowth">x1.00</span> * SchÃ¤dling: <span id="diffPest">x1.00</span></div>
             </div>
             <div class="settings-row">
-              <button id="hardResetBtn" class="ghost Duenger">Hard Reset (alle Daten lschen)</button>
+              <button id="hardResetBtn" class="ghost Duenger">Hard Reset (alle Daten lÃ¶schen)</button>
             </div>
           </div>
         </div>
       </section>
     </main>
+
+    <aside id="rightPanel" class="right-panel">
+      <button id="rightPanelToggle" class="right-panel-toggle" title="Premium Panel schliessen" aria-expanded="true">
+        <span class="live-dot"></span>
+        <i class="ico fi fi-sr-angle-left"></i>
+      </button>
+      <div class="right-panel-content">
+        <div class="panel-tabs">
+          <button class="panel-tab active" data-panel-tab="news">Neuigkeiten</button>
+          <button class="panel-tab" data-panel-tab="shop">Premium Shop</button>
+          <button class="panel-tab" data-panel-tab="events">Events</button>
+        </div>
+        <div class="panel-content">
+          <div id="panel-news" class="panel-section active">
+            <h3>📰 Neuigkeiten</h3>
+            <div id="newsFeed" class="news-feed">
+              <div class="news-item">Willkommen im erweiterten Cannabis Idle Farm!</div>
+              <div class="news-item">Neue Mitarbeiter und Kreuzungssystem verfügbar!</div>
+              <div class="news-item">Stelle Angestellte ein und automatisiere deine Farm.</div>
+            </div>
+          </div>
+          <div id="panel-shop" class="panel-section">
+            <h3>💎 Premium Shop</h3>
+            <div id="premiumShop" class="premium-shop">
+              <div class="premium-item">
+                <div class="item-icon">⚡</div>
+                <div class="item-info">
+                  <div class="item-name">Premium Boost</div>
+                  <div class="item-desc">2x Geschwindigkeit für 1 Stunde</div>
+                </div>
+                <button class="premium-btn"><span class="coin-text"><img src="assets/coin.png" alt="" class="coin-icon"> 4.99</span></button>
+              </div>
+              <div class="premium-item">
+                <div class="item-icon">🌿</div>
+                <div class="item-info">
+                  <div class="item-name">Mega Harvest</div>
+                  <div class="item-desc">Verdopple alle Erträge für 30 Min</div>
+                </div>
+                <button class="premium-btn"><span class="coin-text"><img src="assets/coin.png" alt="" class="coin-icon"> 2.99</span></button>
+              </div>
+              <div class="premium-item">
+                <div class="item-icon">🌱</div>
+                <div class="item-info">
+                  <div class="item-name">Golden Seeds</div>
+                  <div class="item-desc">10 zufällige Samen</div>
+                </div>
+                <button class="premium-btn"><span class="coin-text"><img src="assets/coin.png" alt="" class="coin-icon"> 1.99</span></button>
+              </div>
+            </div>
+          </div>
+          <div id="panel-events" class="panel-section">
+            <h3>🎉 Events</h3>
+            <div id="eventsList" class="events-list">
+              <div class="event-item">Grow-Wettbewerb: Höchster Ertrag gewinnt!</div>
+              <div class="event-item">Saisonale Kreuzung: Spezielle Belohnungen</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </aside>
 
     <template id="tpl-plant-card">
       <div class="plant-card">
@@ -367,7 +445,7 @@
           </div>
           <div class="plant-meta">
             <div class="plant-timer" title="Zeit bis Ernte">Timer <span data-timer>--:--</span></div>
-            <div class="plant-health">VitalitEURt <span data-health>100%</span></div>
+            <div class="plant-health">VitalitÃ¤t <span data-health>100%</span></div>
           </div>
           <div class="plant-prod" title="Ertrag je Ernte">
             <span data-yield>0</span> g
@@ -381,32 +459,62 @@
         <div class="water" title="Wasserstand">
           <div class="water-bar" data-water style="width: 0%"></div>
         </div>
-        <div class="nutrients" title="NEURhrstofflevel">
+        <div class="nutrients" title="NÃ¤hrstofflevel">
           <div class="nutrient-bar" data-nutrient style="width: 0%"></div>
         </div>
         <div class="plant-quality">Qualitaet: <span data-quality>Normal</span></div>
         <div class="plant-hud">
-          <div class="hud-left">
-            <button class="icon-btn Duenger" data-remove aria-label="Entfernen" title="Entfernen">
-              <i class="fi fi-sr-trash"></i>
-            </button>
-          </div>
-          <div class="hud-right">
-            <button class="icon-btn" data-harvest aria-label="Ernten" title="Ernten"><i class="fi fi-sr-scissors"></i></button>
-            <button class="icon-btn" data-water-btn aria-label="WEURssern" title="WEURssern"><i class="fi fi-sr-raindrops"></i></button>
-            <button class="icon-btn" data-feed-btn aria-label="D1/4ngen" title="D1/4ngen"><i class="fi fi-sr-flask"></i></button>
-            <button class="icon-btn" data-pest-btn aria-label="Abwehr" title="Abwehr"><i class="fi fi-sr-bug"></i></button>
-            <button class="icon-btn" data-upgrade aria-label="Upgrade" title="Upgrade (Kosten)"><i class="fi fi-sr-level-up-alt"></i><span data-upgrade-cost style="display:none">0</span></button>
+          <div class="hud-actions">
+            <div class="hud-left">
+              <button class="icon-btn" data-harvest aria-label="Ernten" title="Ernten"><i class="fi fi-sr-scissors"></i></button>
+              <button class="icon-btn" data-water-btn aria-label="Wässern" title="Wässern"><i class="fi fi-sr-raindrops"></i></button>
+              <button class="icon-btn" data-feed-btn aria-label="Düngen" title="Düngen"><i class="fi fi-sr-flask"></i></button>
+              <button class="icon-btn" data-pest-btn aria-label="Abwehr" title="Abwehr"><i class="fi fi-sr-bug"></i></button>
+              <button class="icon-btn" data-upgrade aria-label="Upgrade" title="Upgrade (Kosten)"><i class="fi fi-sr-level-up-alt"></i><span data-upgrade-cost style="display:none">0</span></button>
+            </div>
+            <div class="hud-right">
+              <button class="icon-btn danger" data-remove aria-label="Entfernen" title="Entfernen">
+                <i class="fi fi-sr-trash"></i>
+              </button>
+            </div>
           </div>
         </div>
         <div class="floating-container" data-fx></div>
       </div>
     </template>
 
+    <!-- Warenkorb Modal -->
+    <div id="cartModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="cartTitle" hidden>
+      <div class="modal-card cart-modal-card">
+        <button id="cartClose" class="ghost cart-close" type="button" aria-label="Schließen">
+          <i class="fi fi-rr-cross-small"></i>
+        </button>
+        <div class="cart-panel">
+          <div class="cart-header">
+            <h3 id="cartTitle">Warenkorb</h3>
+            <span class="hint">Sammle Produkte und kaufe gesammelt</span>
+          </div>
+          <div id="cartList" class="cart-list empty">
+            <div class="cart-empty">Warenkorb leer</div>
+          </div>
+          <div class="cart-footer">
+            <div class="cart-total">
+              <span>Gesamt:</span>
+              <span id="cartTotal">0</span>
+            </div>
+            <div class="cart-actions">
+              <button id="cartClear" class="ghost" type="button" disabled>Leeren</button>
+              <button id="cartCheckout" class="accent" type="button" disabled>Jetzt kaufen</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Seed Auswahl Modal -->
     <div id="seedModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="seedTitle" hidden>
       <div class="modal-card">
-        <h3 id="seedTitle">Samen auswEURhlen</h3>
+        <h3 id="seedTitle">Samen auswÃ¤hlen</h3>
         <div id="seedList" class="shop-list"></div>
         <div class="modal-actions">
           <button id="seedCancel" class="secondary">Abbrechen</button>
@@ -415,10 +523,10 @@
       </div>
     </div>
 
-    <!-- BestEURtigungs-Modal -->
+    <!-- BestÃ¤tigungs-Modal -->
     <div id="confirmModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="confirmTitle" hidden>
       <div class="modal-card">
-        <h3 id="confirmTitle">BestEURtigen</h3>
+        <h3 id="confirmTitle">BestÃ¤tigen</h3>
         <p id="confirmText">Bist du sicher?</p>
         <div class="modal-actions">
           <button id="confirmCancel" class="secondary">Abbrechen</button>
@@ -429,116 +537,12 @@
 
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
-    <!-- Growmarkt: Seeds icons, smaller consumables, ordered item shop -->
-    <script>
-      document.addEventListener('DOMContentLoaded', function(){
-        try{
-          var trade = document.getElementById('tab-trade');
-          if(!trade) return;
-
-          // Seeds with clean icons
-          var shop = trade.querySelector('#shop');
-          if(shop){
-            shop.innerHTML = '';
-            var strains = [
-              { id:'gelato',  name:'Green Gelato', icon:''},
-              { id:'zushi',   name:'Blue Zushi',   icon:'Z'},
-              { id:'honey',   name:'Honey Cream',  icon:''},
-              { id:'amnesia', name:'Amnesia Haze', icon:''},
-              { id:'gorilla', name:'Gorilla Glue', icon:''},
-              { id:'zkittle', name:'Zkittlez',     icon:''}
-            ];
-            strains.forEach(function(s){
-              var card = document.createElement('div'); card.className='shop-item';
-              card.innerHTML = '<div class="shop-left">\
-                <div class="shop-icon">'+s.icon+'</div>\
-                <div>\
-                  <div class="shop-name">'+s.name+'</div>\
-                  <div class="shop-desc">Beliebt & robust</div>\
-                </div>\
-              </div>\
-              <button class="accent">Kaufen</button>';
-              shop.appendChild(card);
-            });
-          }
-
-          // Order: Seeds -> Consumables -> Items
-          var seedsPanel = shop ? shop.closest('.panel') : null;
-          var consList = trade.querySelector('.consumable-list');
-          var consPanel = consList ? consList.closest('.panel') : null;
-          var itemShop = trade.querySelector('#itemShop');
-          var itemPanel = itemShop ? itemShop.closest('.panel') : null;
-          if(seedsPanel && consPanel && itemPanel && consPanel.nextElementSibling !== itemPanel){
-            trade.insertBefore(consPanel, itemPanel);
-          }
-
-          // Item shop: Tools -> Fertilizer & Additives -> Plant Protection -> Equipment
-          if(itemShop){
-            itemShop.innerHTML = '';
-            var addHeader = function(text){
-              var h = document.createElement('div'); h.className='hint'; h.textContent=text; h.style.gridColumn='1 / -1'; itemShop.appendChild(h);
-              var hr = document.createElement('hr'); hr.className='sep'; hr.style.cssText='border:0;border-top:1px solid #444;opacity:.5;margin:6px 0'; hr.style.gridColumn='1 / -1'; itemShop.appendChild(hr);
-            };
-            var addCard = function(id, iconClass, name, desc, price){
-              var node = document.createElement('div'); node.className='shop-item'; node.setAttribute('data-extra-id', id);
-              node.innerHTML = '<div class="shop-left">\
-                <div class="shop-icon"><i class="'+iconClass+'"></i></div>\
-                <div>\
-                  <div class="shop-name">'+name+'</div>\
-                  <div class="shop-desc">'+(desc||'')+'</div>\
-                </div>\
-              </div>\
-              <button class="secondary">Kaufen ('+price+')</button>';
-              itemShop.appendChild(node);
-            };
-            addHeader('Werkzeuge');
-            addCard('tool_shears','fi fi-sr-scissors','Schere','Zum Ernten erforderlich','EUR 80');
-            addCard('tool_can','fi fi-sr-raindrops','Giesskanne','Zum Waessern erforderlich','EUR 60');
-            addCard('tool_set','fi fi-sr-flask','Duenger-Set','Zum Fuettern erforderlich','EUR 110');
-
-            addHeader('Duenger & Additive');
-            addCard('nutrient_s','fi fi-sr-flask','Duenger S','Einzeldosis NPK','EUR 5');
-            addCard('nutrient_m','fi fi-sr-flask','Duenger M','3x NPK Dosen','EUR 12');
-            addCard('nutrient_l','fi fi-sr-flask','Duenger L','6x NPK Dosen','EUR 22');
-            addCard('pgr_boost','fi fi-sr-bolt','PGR-Booster','Wachstum+, Qualitaet leicht -','EUR 18');
-            addCard('pk_boost','fi fi-sr-rocket','PK-Boost','Bluete-Unterstuetzung','EUR 14');
-            addCard('micro_tea','fi fi-sr-plant','Mikroben-Tee','Bodenleben foerdern','EUR 10');
-
-            addHeader('Pflanzenschutz');
-            addCard('spray_s','fi fi-sr-bug','Pflanzenspray S','1x gegen Insekten','EUR 9');
-            addCard('spray_m','fi fi-sr-bug','Pflanzenspray M','3x gegen Insekten','EUR 24');
-            addCard('fungi_s','fi fi-sr-shield-plus','Fungizid S','1x gegen Schimmel','EUR 11');
-            addCard('fungi_m','fi fi-sr-shield-plus','Fungizid M','3x gegen Schimmel','EUR 30');
-            addCard('beneficial_s','fi fi-sr-leaf','Nuetzlinge','Biologische Abwehr','EUR 14');
-
-            addHeader('Ausstattung');
-            addCard('trimmer','fi fi-sr-fan','Trimmer','+5% Pflanzenertrag','EUR 500');
-            addCard('filter','fi fi-sr-air-freshener','Carbon-Filter','+5% Pflanzenertrag','EUR 350');
-            addCard('fan','fi fi-sr-fan','Ventilator','Reduziert Schimmelrisiko','EUR 220');
-            addCard('dehumidifier','fi fi-sr-wind','Entfeuchter','Feuchte & Schimmel runter','EUR 280');
-          }
-
-          // Normalize labels in consumables (ASCII-safe)
-          if(consList){
-            var mapping=[
-              {sel:'.consumable-name', from:/D[\u00FCu]ngerpaket/i, to:'Duengerpaket'},
-              {sel:'.consumable-name', from:/N[\u00FCu]tzlinge/i, to:'Nuetzlinge'}
-            ];
-            mapping.forEach(function(m){
-              consList.querySelectorAll(m.sel).forEach(function(el){
-                if(m.from.test(el.textContent)) el.textContent = m.to;
-              });
-            });
-          }
-        }catch(e){}
-      });
-    </script>
 
     <!-- Welcome Modal -->
     <div id="welcomeModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="welcomeTitle" aria-describedby="welcomeText" hidden>
       <div class="modal-card">
         <h3 id="welcomeTitle">Willkommen im Spiel!</h3>
-        <p id="welcomeText">Willkommen im Spiel. Du erhEURltst <strong>EUR 250</strong> Startkapital.</p>
+        <p id="welcomeText">Willkommen im Spiel. Du erhÃ¤ltst <strong class="coin-text"><img src="assets/coin.png" alt="" class="coin-icon"> 250</strong> Startkapital.</p>
         <div class="modal-actions">
           <button id="welcomeOk" class="accent">Los geht's</button>
         </div>
@@ -546,51 +550,5 @@
     </div>
 
     <script src="script.js"></script>
-      <script>
-      document.addEventListener('DOMContentLoaded', function(){
-        try{
-          var itemShop = document.getElementById('itemShop');
-          if(!itemShop) return;
-          var addHeader = function(text){
-            var h = document.createElement('div'); h.className='hint'; h.textContent=text; h.style.gridColumn='1 / -1'; itemShop.appendChild(h);
-            var hr = document.createElement('hr'); hr.className='sep'; hr.style.cssText='border:0;border-top:1px solid #444;opacity:.5;margin:6px 0'; hr.style.gridColumn='1 / -1'; itemShop.appendChild(hr);
-          };
-          var addCard = function(id, iconClass, name, desc, price){
-            if(itemShop.querySelector('[data-extra-id="'+id+'"]')) return;
-            var node = document.createElement('div');
-            node.className = 'shop-item';
-            node.setAttribute('data-extra-id', id);
-            node.innerHTML = '\
-              <div class="shop-left">\
-                <div class="shop-icon"><i class="'+iconClass+'"></i></div>\
-                <div>\
-                  <div class="shop-name">'+name+'</div>\
-                  <div class="shop-desc">'+(desc||'')+'</div>\
-                </div>\
-              </div>\
-              <button class="secondary">Kaufen ('+price+')</button>';
-            itemShop.appendChild(node);
-          };
-          // Werkzeuge - Duenger
-          addHeader('Werkzeuge * Duenger');
-          addCard('nutrient_s','fi fi-sr-flask','Duenger S','Einzeldosis NPK','EUR 5');
-          addCard('nutrient_m','fi fi-sr-flask','Duenger M','3x NPK Dosen','EUR 12');
-          addCard('nutrient_l','fi fi-sr-flask','Duenger L','6x NPK Dosen','EUR 22');
-          // Werkzeuge - Additive
-          addHeader('Werkzeuge * Additive');
-          addCard('pgr_boost','fi fi-sr-bolt','PGR-Booster','Wachstum+, Qualitaet leicht -','EUR 18');
-          addCard('pk_boost','fi fi-sr-rocket','PK-Boost','Bluete-Unterstuetzung','EUR 14');
-          addCard('micro_tea','fi fi-sr-plant','Mikroben-Tee','Bodenleben foerdern','EUR 10');
-          // Pflanzenschutz
-          addHeader('Pflanzenschutz');
-          addCard('spray_s','fi fi-sr-bug','Pflanzenspray S','1x gegen Insekten','EUR 9');
-          addCard('spray_m','fi fi-sr-bug','Pflanzenspray M','3x gegen Insekten','EUR 24');
-          addCard('fungi_s','fi fi-sr-shield-plus','Fungizid S','1x gegen Schimmel','EUR 11');
-          addCard('fungi_m','fi fi-sr-shield-plus','Fungizid M','3x gegen Schimmel','EUR 30');
-          addCard('beneficial_s','fi fi-sr-leaf','Nuetzlinge','Biologische Abwehr','EUR 14');
-        }catch(e){}
-      });
-    </script>
   </body>
   </html>
-

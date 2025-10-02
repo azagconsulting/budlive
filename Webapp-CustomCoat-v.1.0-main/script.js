@@ -1,4 +1,4 @@
-
+﻿
 // Cannabis Idle Farm - reworked gameplay
 (function(){
   'use strict';
@@ -13,7 +13,12 @@
                     n >= 1e6  ? (n/1e6 ).toFixed(2)+'M' :
                     n >= 1e3  ? (n/1e3 ).toFixed(2)+'k' :
                     n.toFixed(2));
-  const fmtMoney = n => 'EUR ' + fmt(n);
+  const fmtMoney = (amount, { showPlus=false } = {}) => {
+    const value = Number(amount) || 0;
+    const sign = value < 0 ? '-' : (showPlus && value > 0 ? '+' : '');
+    const abs = Math.abs(value);
+    return `<span class="coin-text">${sign}<img src="assets/coin.png" alt="" class="coin-icon"> ${fmt(abs)}</span>`;
+  };
   const formatTimer = sec => {
     if(!isFinite(sec)) return '--:--';
     if(sec <= 0) return 'bereit';
@@ -30,12 +35,46 @@
   const DAYS_PER_YEAR = 365;
 
   const STRAINS = [
-    { id:'gelato',  name:'Green Gelato',  tag:'GG', cost:50,  yield:50,  grow:120, desc:'Schnell und aromatisch', base:'assets/plants/greengelato', stages:['wachstum0','wachstum1','wachstum2','wachstum3','wachstum4','ende'] },
-    { id:'zushi',   name:'Blue Zushi',    tag:'BZ', cost:320, yield:90,  grow:180, desc:'Frischer Hybrid' },
-    { id:'honey',   name:'Honey Cream',   tag:'HC', cost:540, yield:150, grow:210, desc:'Cremige Indica' },
-    { id:'amnesia', name:'Amnesia Haze',  tag:'AH', cost:900, yield:240, grow:260, desc:'Klassische Sativa' },
-    { id:'gorilla', name:'Gorilla Glue',  tag:'GL', cost:1500,yield:360, grow:320, desc:'Harzige Power' },
-    { id:'zkittle', name:'Zkittlez',      tag:'ZK', cost:2300,yield:520, grow:360, desc:'Suesser Regenbogen' },
+    { id:'gelato',  name:'Green Gelato',  tag:'GG', cost:50,  yield:50,  grow:120, quality:1.0, yieldBonus:0, offerBonus:1.0, desc:'Schnell und aromatisch', base:'assets/plants/greengelato', stages:['wachstum0','wachstum1','wachstum2','wachstum3','wachstum4','ende'] },
+    { id:'zushi',   name:'Blue Zushi',    tag:'BZ', cost:320, yield:90,  grow:180, quality:1.1, yieldBonus:0.05, offerBonus:1.1, desc:'Frischer Hybrid' },
+    { id:'honey',   name:'Honey Cream',   tag:'HC', cost:540, yield:150, grow:210, quality:1.0, yieldBonus:0.1, offerBonus:1.0, desc:'Cremige Indica' },
+    { id:'amnesia', name:'Amnesia Haze',  tag:'AH', cost:900, yield:240, grow:260, quality:1.2, yieldBonus:0, offerBonus:1.2, desc:'Klassische Sativa' },
+    { id:'gorilla', name:'Gorilla Glue',  tag:'GL', cost:1500,yield:360, grow:320, quality:1.1, yieldBonus:0.15, offerBonus:1.1, desc:'Harzige Power' },
+    { id:'zkittle', name:'Zkittlez',      tag:'ZK', cost:2300,yield:520, grow:360, quality:1.3, yieldBonus:0.1, offerBonus:1.3, desc:'Suesser Regenbogen' },
+    { id:'purpleHaze', name: 'Purple Haze', tag: 'PH', cost: 2800, yield: 600, grow: 400, quality: 1.4, yieldBonus: 0.2, offerBonus: 1.4, desc: 'Legendäre Sativa mit zerebraler Wirkung'},
+    { id:'whiteWidow', name: 'White Widow', tag: 'WW', cost: 3500, yield: 750, grow: 420, quality: 1.3, yieldBonus: 0.25, offerBonus: 1.3, desc: 'Ein Klassiker, bekannt für hohen Harzbesatz'},
+    { id:'northernLights', name: 'Northern Lights', tag: 'NL', cost: 4200, yield: 850, grow: 380, quality: 1.2, yieldBonus: 0.3, offerBonus: 1.2, desc: 'Robuste Indica mit schnellem Finish'},
+    { id:'sourDiesel', name: 'Sour Diesel', tag: 'SD', cost: 4800, yield: 920, grow: 420, quality: 1.4, yieldBonus: 0.35, offerBonus: 1.4, desc: 'Energische Sativa mit Zitrusaroma'},
+    { id:'blueDream', name: 'Blue Dream', tag: 'BD', cost: 5200, yield: 1000, grow: 450, quality: 1.3, yieldBonus: 0.4, offerBonus: 1.3, desc: 'Beliebter Hybrid für Entspannung'},
+    { id:'girlScoutCookies', name: 'Girl Scout Cookies', tag: 'GSC', cost: 5800, yield: 1100, grow: 480, quality: 1.5, yieldBonus: 0.45, offerBonus: 1.5, desc: 'Süßer Indica-Dominanter Hybrid'},
+    { id:'cheese', name: 'Cheese', tag: 'CH', cost: 6200, yield: 1150, grow: 500, quality: 1.4, yieldBonus: 0.5, offerBonus: 1.4, desc: 'Klassischer Cheese-Geschmack'},
+    { id:'amnesiaLemon', name: 'Amnesia Lemon', tag: 'AL', cost: 6500, yield: 1200, grow: 520, quality: 1.6, yieldBonus: 0.55, offerBonus: 1.6, desc: 'Zitronige Amnesia-Variante'},
+    { id:'bubbleGum', name: 'Bubble Gum', tag: 'BG', cost: 6800, yield: 1250, grow: 540, quality: 1.5, yieldBonus: 0.6, offerBonus: 1.5, desc: 'Süß wie Kaugummi'},
+    { id:'superSilverHaze', name: 'Super Silver Haze', tag: 'SSH', cost: 7200, yield: 1300, grow: 560, quality: 1.7, yieldBonus: 0.65, offerBonus: 1.7, desc: 'Premium Haze-Sorte'},
+    { id:'northernLights', name: 'Northern Lights', tag: 'NL', cost: 7500, yield: 1350, grow: 580, quality: 1.6, yieldBonus: 0.7, offerBonus: 1.6, desc: 'Robuste Indica mit schnellem Finish'},
+    { id:'blueDream', name: 'Blue Dream', tag: 'BD', cost: 7800, yield: 1400, grow: 600, quality: 1.5, yieldBonus: 0.75, offerBonus: 1.5, desc: 'Beliebter Hybrid für Entspannung'},
+    { id:'sourDiesel', name: 'Sour Diesel', tag: 'SD', cost: 8100, yield: 1450, grow: 620, quality: 1.7, yieldBonus: 0.8, offerBonus: 1.7, desc: 'Energische Sativa mit Zitrusaroma'},
+    { id:'purpleHaze', name: 'Purple Haze', tag: 'PH', cost: 8400, yield: 1500, grow: 640, quality: 1.8, yieldBonus: 0.85, offerBonus: 1.8, desc: 'Legendäre Sativa mit zerebraler Wirkung'},
+    { id:'whiteWidow', name: 'White Widow', tag: 'WW', cost: 8700, yield: 1550, grow: 660, quality: 1.6, yieldBonus: 0.9, offerBonus: 1.6, desc: 'Ein Klassiker, bekannt für hohen Harzbesatz'},
+    { id:'gorillaGlue', name: 'Gorilla Glue #4', tag: 'GG4', cost: 9000, yield: 1600, grow: 680, quality: 1.9, yieldBonus: 0.95, offerBonus: 1.9, desc: 'Harzige Power mit hohem THC'},
+    { id:'zkittlez', name: 'Zkittlez', tag: 'ZK', cost: 9300, yield: 1650, grow: 700, quality: 1.7, yieldBonus: 1.0, offerBonus: 1.7, desc: 'Süßer Regenbogen mit tropischen Aromen'},
+    { id:'amnesiaHaze', name: 'Amnesia Haze', tag: 'AH', cost: 9600, yield: 1700, grow: 720, quality: 1.8, yieldBonus: 1.05, offerBonus: 1.8, desc: 'Klassische Sativa mit euphorischer Wirkung'},
+    { id:'blueZushi', name: 'Blue Zushi', tag: 'BZ', cost: 9900, yield: 1750, grow: 740, quality: 1.6, yieldBonus: 1.1, offerBonus: 1.6, desc: 'Frischer Hybrid mit blauer Färbung'},
+    { id:'honeyCream', name: 'Honey Cream', tag: 'HC', cost: 10200, yield: 1800, grow: 760, quality: 1.7, yieldBonus: 1.15, offerBonus: 1.7, desc: 'Cremige Indica mit honigartigem Geschmack'},
+    { id:'jackHerer', name: 'Jack Herer', tag: 'JH', cost: 10500, yield: 1850, grow: 780, quality: 1.8, yieldBonus: 1.2, offerBonus: 1.8, desc: 'Klassische Sativa mit klarer Wirkung'},
+    { id:'ogKush', name: 'OG Kush', tag: 'OG', cost: 10800, yield: 1900, grow: 800, quality: 1.9, yieldBonus: 1.25, offerBonus: 1.9, desc: 'Legendäre Kush mit Erdbeer-Aroma'},
+    { id:'trainwreck', name: 'Trainwreck', tag: 'TW', cost: 11100, yield: 1950, grow: 820, quality: 1.7, yieldBonus: 1.3, offerBonus: 1.7, desc: 'Energetische Sativa mit Zitrusgeschmack'},
+    { id:'criticalMass', name: 'Critical Mass', tag: 'CM', cost: 11400, yield: 2000, grow: 840, quality: 1.6, yieldBonus: 1.35, offerBonus: 1.6, desc: 'Schwere Indica mit hohem Ertrag'},
+    { id:'bigBud', name: 'Big Bud', tag: 'BB', cost: 11700, yield: 2050, grow: 860, quality: 1.8, yieldBonus: 1.4, offerBonus: 1.8, desc: 'Riesige Buds mit süßem Geschmack'},
+    { id:'masterKush', name: 'Master Kush', tag: 'MK', cost: 12000, yield: 2100, grow: 880, quality: 1.9, yieldBonus: 1.45, offerBonus: 1.9, desc: 'Pure Indica mit entspannender Wirkung'},
+    { id:'lemonHaze', name: 'Lemon Haze', tag: 'LH', cost: 12300, yield: 2150, grow: 900, quality: 1.7, yieldBonus: 1.5, offerBonus: 1.7, desc: 'Zitronige Haze mit euphorischer Wirkung'},
+    { id:'afghanKush', name: 'Afghan Kush', tag: 'AK', cost: 12600, yield: 2200, grow: 920, quality: 1.8, yieldBonus: 1.55, offerBonus: 1.8, desc: 'Klassische Afghan Kush mit Haschgeschmack'},
+    { id:'durbanPoison', name: 'Durban Poison', tag: 'DP', cost: 12900, yield: 2250, grow: 940, quality: 1.9, yieldBonus: 1.6, offerBonus: 1.9, desc: 'Pure Sativa mit medizinischen Eigenschaften'},
+    { id:'hinduKush', name: 'Hindu Kush', tag: 'HK', cost: 13200, yield: 2300, grow: 960, quality: 1.7, yieldBonus: 1.65, offerBonus: 1.7, desc: 'Himalaya-Indica mit erdigen Aromen'},
+    { id:'nepaleseJam', name: 'Nepalese Jam', tag: 'NJ', cost: 13500, yield: 2350, grow: 980, quality: 1.8, yieldBonus: 1.7, offerBonus: 1.8, desc: 'Süße Indica mit Beerengeschmack'},
+    { id:'pakistaniChitral', name: 'Pakistani Chitral', tag: 'PC', cost: 13800, yield: 2400, grow: 1000, quality: 1.9, yieldBonus: 1.75, offerBonus: 1.9, desc: 'Seltene Chitral Kush mit hohem THC'},
+    { id:'thaiStick', name: 'Thai Stick', tag: 'TS', cost: 14100, yield: 2450, grow: 1020, quality: 1.8, yieldBonus: 1.8, offerBonus: 1.8, desc: 'Legendäre Thai Sativa mit Mango-Aroma'},
+    { id:'malawiGold', name: 'Malawi Gold', tag: 'MG', cost: 14400, yield: 2500, grow: 1040, quality: 2.0, yieldBonus: 1.85, offerBonus: 2.0, desc: 'Goldene Malawi Sativa mit Premium-Qualität'}
   ];
 
   const GLOBAL_UPGRADES = [
@@ -43,6 +82,8 @@
     { id:'nutrients', name:'Naehrstoff-Booster', baseCost:250, inc:0.20, desc:'Alle Pflanzen +20% je Stufe' },
     { id:'climate', name:'Klimasteuerung', baseCost:800, inc:0.35, desc:'Alle Pflanzen +35% je Stufe' },
     { id:'automation', name:'Automatisierung', baseCost:2500, inc:0.50, desc:'Alle Pflanzen +50% je Stufe' },
+    { id:'resonance', name:'Resonanz-Soundscapes', baseCost:4200, inc:0.28, desc:'Frequenz-Tuning beschleunigt Wachstum (+28% je Stufe)' },
+    { id:'biophotonics', name:'Biophotonik-Kuppeln', baseCost:6400, inc:0.40, desc:'Spektrale Lichtkuppeln +40% je Stufe' },
   ];
 
   const ITEMS = [
@@ -65,18 +106,28 @@
     { id:'humidifier', name:'Luftbefeuchter', icon:'HB', cost:260, desc:'Stabilisiert Klima, weniger Schimmel', category:'equipment', effects:{ pestReduce:{ mold:0.8 } } },
     { id:'irrigation', name:'Bewaesserungssystem', icon:'IR', cost:700, desc:'+5% Pflanzenertrag', category:'equipment', effects:{ yieldMult:1.05 } },
     { id:'ph_meter', name:'pH-Meter', icon:'PH', cost:180, desc:'+5% Pflanzenertrag', category:'tools', effects:{ yieldMult:1.05 } },
-    { id:'thermometer', name:'Thermometer', icon:'TM', cost:90, desc:'Leicht besseres Klima', category:'equipment', effects:{ pestReduce:{ mold:0.95, thrips:0.95 } } }
+    { id:'thermometer', name:'Thermometer', icon:'TM', cost:90, desc:'Leicht besseres Klima', category:'equipment', effects:{ pestReduce:{ mold:0.95, thrips:0.95 } } },
+    { id:'soundscape', name:'Soundscape-System', icon:'SS', cost:620, desc:'Beruhigt Pflanzen, +4% Pflanzenertrag', category:'equipment', effects:{ yieldMult:1.04 } },
+    { id:'aero_drone', name:'Aero-Drone', icon:'AD', cost:820, desc:'Autonomes Pflegen, +5% Pflanzenertrag', category:'equipment', effects:{ yieldMult:1.05 } },
+    { id:'brand_wall', name:'Markengalerie', icon:'HW', cost:1100, desc:'+12% Verkaufspreis', category:'commerce', effects:{ priceMult:1.12 } },
+    { id:'genetic_analyzer', name:'Genetischer Analyzer', icon:'GA', cost:1500, desc:'Verbessert Kreuzungserfolge', category:'tools', effects:{} },
+    { id:'hydro_system', name:'Hydroponik-System', icon:'HS', cost:2000, desc:'+10% Pflanzenertrag', category:'equipment', effects:{ yieldMult:1.1 } },
+    { id:'led_panel', name:'LED-Panel', icon:'LP', cost:1800, desc:'Beschleunigt Wachstum', category:'equipment', effects:{ growthMult:1.15 } },
+    { id:'co2_generator', name:'CO2-Generator', icon:'CO2', cost:2500, desc:'+15% Pflanzenertrag', category:'equipment', effects:{ yieldMult:1.15 } },
+    { id:'auto_waterer', name:'Automatische Bewässerung', icon:'AW', cost:2200, desc:'Reduziert Wasserverbrauch', category:'equipment', effects:{ waterReduce:0.2 } },
+    { id:'pest_trap', name:'Schädlingsfalle', icon:'PT', cost:1600, desc:'Reduziert Schädlinge', category:'equipment', effects:{ pestReduce:{ mites:0.3, thrips:0.3 } } },
+    { id:'soil_tester', name:'Boden-Tester', icon:'ST', cost:1300, desc:'Verbessert Nährstoffaufnahme', category:'tools', effects:{ nutrientBoost:0.1 } },
+    { id:'grow_tent', name:'Grow-Zelt', icon:'GT', cost:3000, desc:'+20% Pflanzenertrag', category:'equipment', effects:{ yieldMult:1.2 } },
+    { id:'extraction_machine', name:'Extraktionsmaschine', icon:'EM', cost:4000, desc:'+25% Verkaufspreis', category:'equipment', effects:{ priceMult:1.25 } },
+    { id:'plasma_lantern', name:'Plasma-Lantern', icon:'PL', cost:5200, desc:'Pulslicht +12% Wachstum', category:'equipment', effects:{ growthMult:1.12 } },
+    { id:'nano_reservoir', name:'Nano-Reservoir', icon:'NR', cost:3600, desc:'Speichert Giesswasser, -30% Verbrauch', category:'equipment', effects:{ waterReduce:0.30 } },
+    { id:'quantum_rootnet', name:'Quantum Rootnet', icon:'QR', cost:4400, desc:'Sensorwurzelnetz +12% Ertrag, +5% Qualitaet', category:'equipment', effects:{ yieldMult:1.12, qualityMult:1.05 } },
+    { id:'ion_shower', name:'Ionendusche', icon:'IS', cost:4800, desc:'Erlebnisverkauf +18% Preis', category:'equipment', effects:{ priceMult:1.18 } },
+    { id:'lunar_timer', name:'Lunar-Timer', icon:'LT', cost:950, desc:'Mondphasen-Timing +8% Wachstum', category:'tools', effects:{ growthMult:1.08 } },
+    { id:'bio_sentry', name:'Bio-Sentry', icon:'BS', cost:2900, desc:'Bio-Scanner -40% Schaedlinge', category:'equipment', effects:{ pestReduce:{ mites:0.4, thrips:0.4, mold:0.35 } } }
   ];
 
-  // Research (Forschungsbaum)
-  const RESEARCH_NODES = [
-    { id:'bio1', name:'Botanik I', desc:'+10% Ertrag', cost:1, group:'yield', value:0.10, requires:[] },
-    { id:'bio2', name:'Botanik II', desc:'+10% Ertrag', cost:2, group:'yield', value:0.10, requires:['bio1'] },
-    { id:'climate1', name:'Klima I', desc:'+10% Wachstum', cost:1, group:'growth', value:0.10, requires:[] },
-    { id:'process1', name:'Verarbeitung I', desc:'+10% Qualitaet', cost:1, group:'quality', value:0.10, requires:[] },
-    { id:'auto1', name:'Automatisierung I', desc:'-20% Wasserverbrauch', cost:1, group:'water', value:0.20, requires:[] },
-    { id:'pest1', name:'Schaedlingskontrolle I', desc:'-25% Befallsrisiko', cost:1, group:'pest', value:0.25, requires:[] },
-  ];
+
 
   // Pests
   const PESTS = [
@@ -86,28 +137,52 @@
   ];
 
   // Neues Forschungsmodell: 4 Branches mit Kacheln
-  const RESEARCH_BRANCHES = [
-    { id:'lamp', name:'Lampen', icon:'L', nodes:[
-      { id:'lamp1', name:'LED Tuning I', cost:1, effects:{ growth:0.10 } },
-      { id:'lamp2', name:'Lichtmanagement', cost:2, effects:{ growth:0.10, yield:0.05 } },
-      { id:'lamp3', name:'Spektrum Pro', cost:3, effects:{ growth:0.10, yield:0.10 } },
-    ]},
-    { id:'vent', name:'Lueftung', icon:'V', nodes:[
-      { id:'vent1', name:'Luftstrom I', cost:1, effects:{ pest:0.10 } },
-      { id:'vent2', name:'Abluft+Filter', cost:2, effects:{ pest_mold:0.15, quality:0.05 } },
-      { id:'vent3', name:'Zuluft-Automatik', cost:3, effects:{ pest:0.10, growth:0.05 } },
-    ]},
-    { id:'elec', name:'Elektrik', icon:'E', nodes:[
-      { id:'elec1', name:'Energie-Monitor', cost:1, effects:{ cost:0.15 } },
-      { id:'elec2', name:'Effizienz I', cost:2, effects:{ cost:0.15 } },
-      { id:'elec3', name:'Effizienz II', cost:3, effects:{ cost:0.20 } },
-    ]},
-    { id:'fan', name:'Ventilator', icon:'F', nodes:[
-      { id:'fan1', name:'Schwingventilator', cost:1, effects:{ pest_mold:0.10 } },
-      { id:'fan2', name:'Stroemungslehre', cost:2, effects:{ growth:0.05, quality:0.05 } },
-      { id:'fan3', name:'EC-Upgrade', cost:3, effects:{ pest_mold:0.15, pest:0.10 } },
-    ]},
-  ];
+  const RESEARCH_TREE = {
+    botany: {
+      name: 'Botanik',
+      icon: '🌿',
+      nodes: {
+        'start_botany': { name: 'Grundlagen der Botanik', desc: 'Schaltet den Botanik-Zweig frei.', cost: 0, requires: [], position: { x: 50, y: 0 } },
+        'yield_1': { name: 'Ertragssteigerung I', desc: '+10% Ertrag für alle Pflanzen.', cost: 1, effects: { yield: 0.1 }, requires: ['start_botany'], position: { x: 50, y: 100 } },
+        'quality_1': { name: 'Qualitätsverbesserung I', desc: '+5% Qualität für alle Pflanzen.', cost: 1, effects: { quality: 0.05 }, requires: ['start_botany'], position: { x: 150, y: 100 } },
+        'yield_2': { name: 'Ertragssteigerung II', desc: '+15% Ertrag für alle Pflanzen.', cost: 3, effects: { yield: 0.15 }, requires: ['yield_1'], position: { x: 50, y: 200 } },
+        'quality_2': { name: 'Qualitätsverbesserung II', desc: '+10% Qualität für alle Pflanzen.', cost: 3, effects: { quality: 0.1 }, requires: ['quality_1'], position: { x: 150, y: 200 } },
+        'genetics': { name: 'Genetische Optimierung', desc: 'Schaltet die Möglichkeit frei, Samen zu verbessern.', cost: 5, effects: { unlock_genetics: true }, requires: ['yield_2', 'quality_2'], position: { x: 100, y: 300 } },
+      }
+    },
+    training: {
+      name: 'Training',
+      icon: '✂️',
+      nodes: {
+        'start_training': { name: 'Pflanzentraining', desc: 'Schaltet den Trainings-Zweig frei.', cost: 1, requires: [], position: { x: 350, y: 0 } },
+        'lst': { name: 'Low Stress Training (LST)', desc: 'Biege deine Pflanzen für mehr Ertrag. +15% Ertrag, +5% Wachstumszeit.', cost: 2, effects: { yield: 0.15, growthTime: 0.05 }, requires: ['start_training'], position: { x: 300, y: 100 } },
+        'hst': { name: 'High Stress Training (HST)', desc: 'Beschneide deine Pflanzen für höhere Qualität. +15% Qualität, +10% Wachstumszeit.', cost: 2, effects: { quality: 0.15, growthTime: 0.10 }, requires: ['start_training'], position: { x: 400, y: 100 } },
+        'scrog': { name: 'Screen of Green (SCROG)', desc: 'Optimiere die Lichtverteilung. +20% Ertrag.', cost: 4, effects: { yield: 0.20 }, requires: ['lst'], position: { x: 300, y: 200 } },
+        'supercropping': { name: 'Supercropping', desc: 'Kontrollierter Stress für maximale Potenz. +20% Qualität.', cost: 4, effects: { quality: 0.20 }, requires: ['hst'], position: { x: 400, y: 200 } },
+        'mainlining': { name: 'Main-Lining', desc: 'Extreme Form des HST für gleichmäßige, große Colas. +25% Ertrag und +15% Qualität, +20% Wachstumszeit.', cost: 6, effects: { yield: 0.25, quality: 0.15, growthTime: 0.20 }, requires: ['scrog', 'supercropping'], position: { x: 350, y: 300 } },
+      }
+    },
+    equipment: {
+      name: 'Ausrüstung',
+      icon: '💡',
+      nodes: {
+          'start_equipment': { name: 'Ausrüstungs-Upgrades', desc: 'Schaltet den Ausrüstungs-Zweig frei.', cost: 1, requires: [], position: { x: 600, y: 0 } },
+          'lights_1': { name: 'Bessere Lampen', desc: '+10% Wachstum.', cost: 2, effects: { growth: 0.1 }, requires: ['start_equipment'], position: { x: 550, y: 100 } },
+          'ventilation_1': { name: 'Bessere Lüftung', desc: '-15% Schädlingsrisiko.', cost: 2, effects: { pest: 0.15 }, requires: ['start_equipment'], position: { x: 650, y: 100 } },
+          'hydroponics': { name: 'Hydroponik', desc: 'Pflanzen wachsen in Nährlösung. +30% Wachstum, -100% Wasserverbrauch, aber +50% Düngekosten.', cost: 5, effects: { growth: 0.3, water: 1.0, nutrientCost: 0.5 }, requires: ['lights_1', 'ventilation_1'], position: { x: 600, y: 200 } },
+      }
+    },
+    economy: {
+      name: 'Wirtschaft',
+      icon: '💰',
+      nodes: {
+          'start_economy': { name: 'Wirtschafts-Wissen', desc: 'Schaltet den Wirtschafts-Zweig frei.', cost: 1, requires: [], position: { x: 850, y: 0 } },
+          'prices_1': { name: 'Bessere Preise I', desc: '+10% auf alle Verkäufe.', cost: 2, effects: { priceMult: 0.1 }, requires: ['start_economy'], position: { x: 800, y: 100 } },
+          'costs_1': { name: 'Kosten senken I', desc: '-15% auf alle Einkäufe im Shop.', cost: 2, effects: { cost: 0.15 }, requires: ['start_economy'], position: { x: 900, y: 100 } },
+          'dealer': { name: 'Dealer-Netzwerk', desc: 'Schaltet neue, lukrativere Aufträge frei.', cost: 5, effects: { unlock_dealer: true }, requires: ['prices_1', 'costs_1'], position: { x: 850, y: 200 } },
+      }
+    }
+  };
 
   // Grow-Raeume (Immobilien)
   const GROW_ROOMS = [
@@ -124,6 +199,13 @@
   const OFFER_SPAWN_MIN = 45;
   const OFFER_SPAWN_MAX = 90;
   const MAX_ACTIVE_OFFERS_BASE = 3;
+
+  // Employees
+  const EMPLOYEES = [
+    { id:'grower', name:'Grower', desc:'Automatisiert Wässern und Düngen', salary:200, tasks:['water', 'feed'], image:'https://via.placeholder.com/80x80/00c16a/ffffff?text=GROWER' },
+    { id:'harvester', name:'Harvester', desc:'Automatisiert Ernten', salary:300, tasks:['harvest'], image:'https://via.placeholder.com/80x80/00c16a/ffffff?text=HARVESTER' },
+    { id:'caretaker', name:'Caretaker', desc:'Behandelt Schädlinge automatisch', salary:250, tasks:['treat'], image:'https://via.placeholder.com/80x80/00c16a/ffffff?text=CARETAKER' },
+  ];
 
   const WATER_MAX = 100;
   const WATER_START = 55;
@@ -152,7 +234,7 @@
     normal: { name:'Normal', growth: 1.15, pest: 1.0 },
     hard:   { name:'Schwer', growth: 0.95, pest: 1.4 },
   };
-  // Globaler Drossel-Faktor fuer SchAedlings-Spawns (z. B. 0.25 = 25% der bisherigen Haeufigkeit)
+  // Globaler Drossel-Faktor fuer Schädlings-Spawns (z. B. 0.25 = 25% der bisherigen Haeufigkeit)
   const PEST_GLOBAL_RATE = 0.25;
   // Zusaetzliche, konditionsbasierte Krankheiten/Probleme
   const EXTRA_PESTS = {
@@ -191,6 +273,7 @@
     nextOfferIn:10,
     itemsOwned:{},
     seeds:{},
+    cart:[],
     consumables:{ water:0, nutrient:0, spray:0, fungicide:0, beneficials:0 },
     difficulty:'normal',
     marketMult:1,
@@ -212,10 +295,15 @@
     lastMonthProcessed:1,
     nextMarketEventIn:90,
     welcomeRewarded:false,
-    sidebarCollapsed:false
+    sidebarCollapsed:false,
+    customStrains:[],
+    employees:{},
+    activeEvents:[]
   };
 
   function getStrain(id){
+    const custom = (state.customStrains || []).find(s => s.id === id);
+    if(custom) return custom;
     return STRAINS.find(s => s.id === id) || STRAINS[0];
   }
 
@@ -316,7 +404,8 @@
     const base = strain.yield || 10;
     const levelMult = Math.pow(1.12, Math.max(0, plant.level - 1));
     const res = researchEffects();
-    return base * levelMult * (1 + (res.yield||0)) * globalMultiplier();
+    const bonus = state.harvestBonus || 1;
+    return base * levelMult * (1 + (res.yield||0)) * globalMultiplier() * bonus;
   }
 
   function growTimeFor(plant){
@@ -375,7 +464,7 @@
     if(plant.nutrients < 25) statuses.push('Braucht Duenger');
     if(plant.health < 45) statuses.push('Stress');
     if(statuses.length === 0) statuses.push('Stabil');
-    return statuses.join(' � ');
+    return statuses.join(' Â· ');
   }
 
   function qualityLabel(value){
@@ -415,7 +504,18 @@
     const timerEl = card.querySelector('[data-timer]');
     if(timerEl) timerEl.textContent = formatTimer(timerForPlant(plant));
     const healthEl = card.querySelector('[data-health]');
-    if(healthEl) healthEl.textContent = `${Math.round(plant.health)}%`;
+    if(healthEl) {
+      healthEl.textContent = `${Math.round(plant.health)}%`;
+      const healthWrapper = healthEl.parentElement;
+      healthWrapper.classList.remove('health-high', 'health-medium', 'health-low');
+      if (plant.health > 70) {
+        healthWrapper.classList.add('health-high');
+      } else if (plant.health > 30) {
+        healthWrapper.classList.add('health-medium');
+      } else {
+        healthWrapper.classList.add('health-low');
+      }
+    }
     const statusEl = card.querySelector('[data-status]');
     if(statusEl) statusEl.textContent = statusForPlant(plant);
     const qualityEl = card.querySelector('[data-quality]');
@@ -434,7 +534,7 @@
     if(nutrientBar) nutrientBar.style.width = `${Math.round((plant.nutrients / NUTRIENT_MAX) * 100)}%`;
     const pestBadge = card.querySelector('[data-pest]');
     if(plant.pest){
-      const pest = PESTS.find(p => p.id === plant.pest.id) || {icon:'??', name:'Schaedlinge'};
+      const pest = PESTS.find(p => p.id === plant.pest.id) || {icon:'??', name:'SchÃ¤dlinge'};
       const sev = Math.round((plant.pest.sev || 1) * 100);
       if(pestBadge){ pestBadge.textContent = pest.icon + ' ' + pest.name + ' (' + sev + '%)'; pestBadge.title = 'Befallen'; }
       card.classList.add('card-alert');
@@ -490,6 +590,7 @@
       state.offers = Array.isArray(loaded.offers) ? loaded.offers : [];
       state.itemsOwned = loaded.itemsOwned || {};
       state.seeds = loaded.seeds || {};
+      state.cart = Array.isArray(loaded.cart) ? loaded.cart : [];
       state.level = loaded.level || 1;
       state.xp = loaded.xp || 0;
       state.jobId = (typeof loaded.jobId !== 'undefined') ? loaded.jobId : null;
@@ -515,8 +616,10 @@
       if(typeof state.gameDaysTotal !== 'number' || !isFinite(state.gameDaysTotal)) state.gameDaysTotal = 0;
       if(typeof loaded.growTierIndex === 'number') state.growTierIndex = loaded.growTierIndex; else state.growTierIndex = state.growTierIndex || 0;
       if(typeof loaded.slotsUnlocked === 'number') state.slotsUnlocked = loaded.slotsUnlocked; else state.slotsUnlocked = Math.min(2, state.slotsUnlocked||2);
-      if(typeof loaded.sidebarCollapsed === 'boolean') state.sidebarCollapsed = loaded.sidebarCollapsed;
+      state.customStrains = Array.isArray(loaded.customStrains) ? loaded.customStrains : [];
+      state.employees = loaded.employees || {};
       ensureConsumables();
+      ensureCart();
       state.plants.forEach(ensurePlantDefaults);
     }catch(err){
       console.warn('Save konnte nicht gelesen werden', err);
@@ -539,7 +642,7 @@
       const goodNutrient = nutrientRatio >= 0.4 && nutrientRatio <= 0.8;
 
       const d = DIFFICULTIES[state.difficulty] || DIFFICULTIES.normal;
-      let growthFactor = d.growth;
+      let growthFactor = d.growth * (state.growthBonus || 1);
       let healthDelta = 0;
       let qualityDelta = 0;
       // PGR-Boost: schnelleres Wachstum, kleine Qualitaetskosten
@@ -631,7 +734,7 @@
     // base risk modified by conditions and owned items
     const d = DIFFICULTIES[state.difficulty] || DIFFICULTIES.normal;
     const mods = pestRiskModifiers();
-    // Phase ermitteln: Bluete nur fuer bestimmte SchAedlinge
+    // Phase ermitteln: Bluete nur fuer bestimmte SchÃ¤dlinge
     const inFlower = (function(){
       if(plant.growProg >= 1) return false;
       const idx = Math.min(STAGE_LABELS.length - 1, Math.floor(plant.growProg * STAGE_LABELS.length));
@@ -659,11 +762,11 @@
     }
     // Zusaetzliche, konditionsbasierte Spawns (falls aus obiger Schleife nichts gesetzt)
     if(!plant.pest){
-      // Wurzelfaeule bei Ueberwaesserung wahrscheinlicher
+      // Wurzelfaeule bei ÃœberwÃ¤sserung wahrscheinlicher
       let r1 = (EXTRA_PESTS.root_rot.base || 0.006) * dt * (PEST_GLOBAL_RATE || 1);
       r1 *= (waterRatio > 0.9 ? 6 : 0.1);
       if(Math.random() < r1){ plant.pest = { id:'root_rot', sev:1 }; return; }
-      // Faule Blaetter bei Ueberduengung wahrscheinlicher
+      // Faule Blaetter bei ÃœberdÃ¼ngung wahrscheinlicher
       let r2 = (EXTRA_PESTS.leaf_rot.base || 0.008) * dt * (PEST_GLOBAL_RATE || 1);
       r2 *= (nutrientRatio > 0.9 ? 5 : 0.1);
       if(Math.random() < r2){ plant.pest = { id:'leaf_rot', sev:1 }; return; }
@@ -673,12 +776,10 @@
   function pestRiskModifiers(){
     const m = { mites:1, mold:1, thrips:1 };
     // Research effects reduce risks globally
-    try{
-      const eff = (typeof researchEffectsV2 === 'function') ? researchEffectsV2() : (typeof researchEffects === 'function' ? researchEffects() : {});
-      const general = Math.max(0, 1 - (eff.pest||0));
-      m.mites *= general; m.mold *= general; m.thrips *= general;
-      if(eff.pest_mold) m.mold *= Math.max(0, 1 - eff.pest_mold);
-    }catch(_e){}
+    const eff = researchEffects();
+    const general = Math.max(0, 1 - (eff.pest||0));
+    m.mites *= general; m.mold *= general; m.thrips *= general;
+    if(eff.pest_mold) m.mold *= Math.max(0, 1 - eff.pest_mold);
     // Room effects
     try{
       const room = currentGrowRoom();
@@ -726,6 +827,15 @@
   const playtimeEl = $('#playtime');
   const resetCountEl = $('#resetCount');
   const shopEl = $('#shop');
+  const cartListEl = $('#cartList');
+  const cartTotalEl = $('#cartTotal');
+  const cartCheckoutBtn = $('#cartCheckout');
+  const cartClearBtn = $('#cartClear');
+  const rightPanelToggleBtn = $('#rightPanelToggle');
+  const cartToggleBtn = $('#cartToggle');
+  const cartCountEl = $('#cartCount');
+  const cartModal = $('#cartModal');
+  const cartCloseBtn = $('#cartClose');
   const upgListEl = $('#globalUpgrades');
   const themeToggle = $('#themeToggle');
   // Sidebar
@@ -780,7 +890,7 @@
 
   function showToast(message){
     if(!toastEl) return;
-    toastEl.textContent = message;
+    toastEl.innerHTML = message;
     toastEl.classList.add('show');
     setTimeout(() => toastEl.classList.remove('show'), 1500);
   }
@@ -790,7 +900,7 @@
   function showAnnouncement(msg, dur=4000){
     const bar = document.getElementById('announceBar');
     if(!bar) return;
-    bar.textContent = msg;
+    bar.innerHTML = msg;
     bar.hidden = false;
     bar.classList.add('show');
     if(announceTimer) clearTimeout(announceTimer);
@@ -801,11 +911,11 @@
   }
 
   function renderResources(){
-    const gramsText = fmt(state.grams) + ' g';
-    gramsEls.forEach(el => { if(el) el.textContent = gramsText; });
+    const gramsMarkup = `<span class="gram-display"><img src="assets/bund.png" alt="" class="gram-icon"> ${fmt(state.grams)} g</span>`;
+    gramsEls.forEach(el => { if(el) el.innerHTML = gramsMarkup; });
     const perSecText = fmt(computePerSec()) + ' g/s';
     perSecEls.forEach(el => { if(el) el.textContent = perSecText; });
-    if(cashEl) cashEl.textContent = fmtMoney(state.cash);
+    if(cashEl) cashEl.innerHTML = fmtMoney(state.cash);
     if(levelEl) levelEl.textContent = 'Lvl ' + (state.level||1);
     renderXPBar();
     prestigeEls.points.textContent = String(state.hazePoints);
@@ -844,6 +954,9 @@
     if(collapsed) document.body.classList.add('sidebar-collapsed');
     else document.body.classList.remove('sidebar-collapsed');
     if(sidebarToggle) sidebarToggle.textContent = collapsed ? '"' : '"';
+    if(typeof window.__updateTabHighlight === 'function'){
+      window.requestAnimationFrame(window.__updateTabHighlight);
+    }
   }
 
   function setTimeSpeed(mult){
@@ -896,8 +1009,10 @@
     if(currentIndex > lastIdx){
       for(let idx = lastIdx+1; idx<=currentIndex; idx++){
         const cost = computeMonthlyCost();
-        state.cash -= cost;
-        showToast(`Monatskosten bezahlt: -${fmtMoney(cost)}`);
+        const empCost = computeEmployeeMonthlyCost();
+        state.cash -= cost + empCost;
+        if(empCost > 0) showToast(`Mitarbeiterkosten bezahlt: -${fmtMoney(empCost)}`);
+        if(cost > 0) showToast(`Monatskosten bezahlt: -${fmtMoney(cost)}`);
       }
       state.lastMonthProcessed = currentIndex;
     }
@@ -971,6 +1086,14 @@
     return Math.round(total);
   }
 
+  function computeEmployeeMonthlyCost(){
+    let total = 0;
+    for(const emp of EMPLOYEES){
+      if(state.employees[emp.id]) total += emp.salary;
+    }
+    return total;
+  }
+
   function renderStats(){
     if(lifetimeEl) lifetimeEl.textContent = fmt(state.totalEarned) + ' g';
     if(bestPerSecEl) bestPerSecEl.textContent = fmt(state.bestPerSec) + ' g/s';
@@ -983,32 +1106,29 @@
     if(playtimeEl) playtimeEl.textContent = `${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
   }
   function renderSlots(){
-    // Zeige exakt so viele Plaetze wie der aktuelle Raum hat
     const cap = currentMaxSlots();
-    const unlocked = cap;
-
     slotsEl.innerHTML = '';
-    for(let i = 0; i < unlocked; i++){
+    for(let i = 0; i < cap; i++){
       const plant = state.plants.find(p => p.slot === i);
       const cell = document.createElement('div');
-      cell.className = 'slot';
+      cell.className = plant ? 'slot slot-has-plant' : 'slot slot-empty';
+      cell.dataset.slot = String(i);
+
       if(plant){
         ensurePlantDefaults(plant);
         const tpl = $('#tpl-plant-card');
         const card = tpl.content.firstElementChild.cloneNode(true);
         const strain = getStrain(plant.strainId);
         card.dataset.slot = String(i);
-        card.querySelector('[data-icon]').textContent = strain.tag;
+        card.querySelector('[data-icon]').textContent = strain.tag || '🌿';
         card.querySelector('[data-name]').textContent = strain.name;
         updatePlantCard(card, plant);
         card.querySelector('[data-upgrade]').addEventListener('click', () => upgradePlant(i));
-        card.querySelector('[data-remove]').addEventListener('click', () => removePlant(i));
         card.querySelector('[data-harvest]').addEventListener('click', () => harvestPlant(i));
         const waterBtn = card.querySelector('[data-water-btn]');
         if(waterBtn) waterBtn.addEventListener('click', () => waterPlant(i));
         const feedBtn = card.querySelector('[data-feed-btn]');
         if(feedBtn){
-          // Inline SVG icon (white via currentColor)
           feedBtn.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true" role="img"><path d="M9 3h6v2l-1 1v4.2l4.43 7.38A3 3 0 0 1 15.84 21H8.16a3 3 0 0 1-2.59-3.42L10 10.2V6L9 5V3Zm1.94 9-3.7 6.16A1 1 0 0 0 8.16 19h7.68a1 1 0 0 0 .86-1.54L13.94 12h-3Z"></path></svg>';
           feedBtn.addEventListener('click', () => feedPlant(i));
         }
@@ -1016,20 +1136,19 @@
         if(pb) pb.addEventListener('click', () => treatPlant(i));
         cell.appendChild(card);
       }else{
-        cell.classList.add('center');
-        const btn = document.createElement('button');
-        btn.className = 'secondary';
-        btn.textContent = 'Pflanze setzen';
-        btn.addEventListener('click', () => openShopForSlot(i));
-        const label = document.createElement('div');
-        label.className = 'slot-label';
-        label.textContent = `Slot ${i + 1}`;
-        label.style.position = 'absolute';
-        label.style.bottom = '8px';
-        label.style.left = '10px';
-        label.style.fontSize = '12px';
-        cell.appendChild(btn);
-        cell.appendChild(label);
+        const placeholder = document.createElement('div');
+        placeholder.className = 'slot-empty-card';
+        placeholder.innerHTML = `
+          <div class="slot-empty-icon"><i class="fi fi-rr-seedling"></i></div>
+          <div class="slot-empty-content">
+            <div class="slot-empty-title">Slot ${i + 1}</div>
+            <p class="slot-empty-text">Setze eine neue Sorte oder oeffne den Growmarkt.</p>
+            <div class="slot-empty-actions">
+              <button class="accent" type="button">Pflanze setzen</button>
+            </div>
+          </div>`;
+        placeholder.querySelector('button').addEventListener('click', () => openShopForSlot(i));
+        cell.appendChild(placeholder);
       }
       slotsEl.appendChild(cell);
     }
@@ -1040,21 +1159,21 @@
 
   // Jobs
   const JOBS = [
-    { id:'helper', name:'Aushilfe', salary:120, base:0.75, reqLevel:1 },
-    { id:'courier', name:'Kurier', salary:160, base:0.72, reqLevel:1 },
-    { id:'bar', name:'Barhilfe', salary:180, base:0.70, reqLevel:1 },
-    { id:'store', name:'Ladenhilfe', salary:200, base:0.65, reqLevel:2 },
-    { id:'call', name:'Callcenter', salary:240, base:0.6, reqLevel:2 },
-    { id:'security', name:'Security', salary:280, base:0.55, reqLevel:3 },
-    { id:'assistant', name:'Assistent', salary:340, base:0.5, reqLevel:3 },
-    { id:'driver', name:'Fahrer', salary:400, base:0.45, reqLevel:4 },
-    { id:'lab', name:'Laborhilfe', salary:500, base:0.4, reqLevel:5 },
-    { id:'tech', name:'Techniker', salary:650, base:0.35, reqLevel:6 },
-    { id:'admin', name:'BUero', salary:700, base:0.33, reqLevel:7 },
-    { id:'foreman', name:'Vorarbeiter', salary:850, base:0.3, reqLevel:8 },
-    { id:'manager', name:'Manager', salary:1000, base:0.25, reqLevel:9 },
-    { id:'senior', name:'Senior', salary:1300, base:0.2, reqLevel:10 },
-    { id:'exec', name:'Executive', salary:1700, base:0.15, reqLevel:12 },
+    { id:'runner', name:'Straßenrunner', salary:140, base:0.82, reqLevel:1, desc:'Verteilt Flyer und Samples in der Nachbarschaft.' },
+    { id:'assistant', name:'Shop-Assistent', salary:180, base:0.78, reqLevel:1, desc:'Hilft im Headshop, kümmert sich um Kunden und Kasse.' },
+    { id:'growhelper', name:'Grow-Helfer', salary:220, base:0.74, reqLevel:2, desc:'Unterstützt beim Umtopfen, Bewässern und Trimmen der Pflanzen.' },
+    { id:'delivery', name:'Lieferfahrer', salary:260, base:0.7, reqLevel:2, desc:'Bringt Bestellungen schnell und diskret zu Stammkunden.' },
+    { id:'barista', name:'Café Barista', salary:300, base:0.66, reqLevel:3, desc:'Bereitet infused Drinks und Snacks im Coffeeshop zu.' },
+    { id:'labtech', name:'Labor-Assistent', salary:360, base:0.62, reqLevel:3, desc:'Überwacht Extrakte und dokumentiert Messwerte im Labor.' },
+    { id:'consultant', name:'Grow Consultant', salary:420, base:0.58, reqLevel:4, desc:'Berät Kundschaft zu Sortenwahl, Setup und Pflege.' },
+    { id:'deliverylead', name:'Lieferkoordinator', salary:480, base:0.54, reqLevel:5, desc:'Plant Touren, weist Fahrer ein und verwaltet Lagerbestände.' },
+    { id:'manager', name:'Store Manager', salary:620, base:0.5, reqLevel:6, desc:'Führt das Team, organisiert Schichten und sorgt für Umsatz.' },
+    { id:'operations', name:'Operations Lead', salary:780, base:0.44, reqLevel:7, desc:'Optimiert Produktion, Einkauf und Qualitätskontrolle.' },
+    { id:'chemist', name:'Extrakt-Chemiker', salary:960, base:0.38, reqLevel:8, desc:'Entwickelt neue Konzentrate und stellt Reinheit sicher.' },
+    { id:'marketing', name:'Marketing Director', salary:1200, base:0.32, reqLevel:9, desc:'Plant Kampagnen, Social Media und Events.' },
+    { id:'finance', name:'Finanzmanager', salary:1500, base:0.26, reqLevel:10, desc:'Betreut Buchhaltung, Forecasts und Investoren.' },
+    { id:'globalbuyer', name:'Internationaler Einkäufer', salary:1900, base:0.22, reqLevel:11, desc:'Sichert rare Genetik und knüpft internationale Kontakte.' },
+    { id:'executive', name:'Chief Growth Officer', salary:2400, base:0.18, reqLevel:12, desc:'Setzt langfristige Expansionsstrategie und Partnerschaften um.' }
   ];
 
   // Erweiterter Verbrauchsmaterial-Shop (Pakete)
@@ -1067,6 +1186,7 @@
     { id:'pgr_boost', name:'PGR-Booster', icon:'fi fi-sr-bolt', price:18, desc:'Wachstum +, Qualitaet leicht -', add:{ pgr:1 } },
     { id:'pk_boost', name:'PK-Boost', icon:'fi fi-sr-rocket', price:14, desc:'Bluete-Unterstuetzung', add:{ nutrient:2 } },
     { id:'micro_tea', name:'Mikroben-Tee', icon:'fi fi-sr-plant', price:10, desc:'Bodenleben foerdern', add:{ nutrient:1 } },
+    { id:'micro_bio', name:'Bio-Elixier', icon:'fi fi-sr-flower-tulip', price:26, desc:'2x NPK + 1x Booster', add:{ nutrient:2, pgr:1 } },
     // Pflanzenschutz Packs
     { id:'spray_s', name:'Pflanzenspray S', icon:'fi fi-sr-bug', price:9, desc:'1x gegen Insekten', add:{ spray:1 } },
     { id:'spray_m', name:'Pflanzenspray M', icon:'fi fi-sr-bug', price:24, desc:'3x gegen Insekten', add:{ spray:3 } },
@@ -1079,26 +1199,80 @@
   function renderJobs(){
     const wrap = document.getElementById('jobsList');
     if(!wrap) return;
+    wrap.classList.add('jobs-grid');
     wrap.innerHTML = '';
+
     const lvl = state.level || 1;
+    const applications = state.applications || [];
+    const currentJob = JOBS.find(j => j.id === state.jobId) || null;
+
+    const header = document.createElement('div');
+    header.className = 'jobs-header';
+    const currentLabel = currentJob ? currentJob.name : 'Keiner';
+    header.innerHTML = `<h3>Aktueller Job: ${currentLabel}</h3>`;
+    const meta = document.createElement('div');
+    meta.className = 'jobs-meta';
+    meta.innerHTML = `<span>Level ${lvl}</span>` +
+      (currentJob ? `<span>Gehalt: ${fmtMoney(currentJob.salary)}/Monat</span>` : '') +
+      `<span>Bewerbungen: ${applications.length}/2</span>`;
+    header.appendChild(meta);
+    if(currentJob){
+      const quitBtn = document.createElement('button');
+      quitBtn.className = 'ghost';
+      quitBtn.type = 'button';
+      quitBtn.textContent = 'Kündigen';
+      quitBtn.addEventListener('click', () => fireJob());
+      header.appendChild(quitBtn);
+    }
+    wrap.appendChild(header);
+
     JOBS.forEach(job => {
       const owned = state.jobId === job.id;
-      const div = document.createElement('div');
-      div.className = 'upgrade';
+      const pending = applications.some(a => a.jobId === job.id);
+      const eligible = lvl >= job.reqLevel;
       const chance = Math.round(job.base * Math.min(1, (lvl / Math.max(1, job.reqLevel))) * 100);
-      div.innerHTML = `
-        <div class="upg-left">
-          <div class="upg-name">${job.name}</div>
-          <div class="upg-level">Gehalt: ${fmtMoney(job.salary)} / Monat � Anforderung: Lvl ${job.reqLevel}</div>
-          <div class="hint">Erfolgschance Bewerbung ca. ${chance}%</div>
+
+      const card = document.createElement('div');
+      card.className = 'job-card';
+      if(owned) card.classList.add('job-card-active');
+      if(!eligible && !owned) card.classList.add('job-card-locked');
+
+      card.innerHTML = `
+        <div class="job-title">${job.name}</div>
+        <div class="job-salary">${fmtMoney(job.salary)}/Monat</div>
+        <div class="job-tags">
+          <span>Level ${job.reqLevel}+</span>
+          <span>Erfolgschance ~${chance}%</span>
         </div>
-        <button class="secondary" ${owned?'disabled':''} data-apply-job="${job.id}">${owned?'Angestellt':'Bewerben'}</button>
+        <p class="job-desc">${job.desc || ''}</p>
+        <div class="jobs-card-actions"></div>
       `;
-      const btn = div.querySelector('button');
-      if(!owned){
-        btn.addEventListener('click', () => confirmApply(job.id));
+      const actions = card.querySelector('.jobs-card-actions');
+      if(owned){
+        const resignBtn = document.createElement('button');
+        resignBtn.className = 'ghost';
+        resignBtn.type = 'button';
+        resignBtn.textContent = 'Kündigen';
+        resignBtn.addEventListener('click', () => fireJob());
+        actions.appendChild(resignBtn);
+      }else if(pending){
+        const label = document.createElement('span');
+        label.className = 'job-meta';
+        label.textContent = 'Bewerbung läuft';
+        actions.appendChild(label);
+      }else{
+        const applyBtn = document.createElement('button');
+        applyBtn.className = 'secondary';
+        applyBtn.type = 'button';
+        applyBtn.textContent = eligible ? 'Bewerben' : `Gesperrt (Lvl ${job.reqLevel})`;
+        applyBtn.disabled = !eligible;
+        if(eligible){
+          applyBtn.addEventListener('click', () => confirmApply(job.id));
+        }
+        actions.appendChild(applyBtn);
       }
-      wrap.appendChild(div);
+
+      wrap.appendChild(card);
     });
   }
 
@@ -1144,7 +1318,7 @@
     for(const m of list){
       const node = document.createElement('div');
       node.className = 'offer';
-      node.textContent = m.text;
+      node.innerHTML = m.text;
       wrap.appendChild(node);
     }
   }
@@ -1156,35 +1330,326 @@
     state.messages.push({ id, text, ts: Date.now() });
   }
 
-  function renderShop(selectedSlot){
-    if(!shopEl) return;
-    shopEl.innerHTML = '';
-    for(const strain of STRAINS){
-      const cost = strainPurchaseCost(strain.id);
-      const card = document.createElement('div');
-      card.className = 'shop-item';
-      const duration = strain.grow || 180;
-      const mm = Math.floor(duration / 60);
-      const ss = duration % 60;
-      card.innerHTML = `
-        <div class="shop-left">
-          <div class="shop-icon">${strain.tag}</div>
-          <div>
-            <div class="shop-name">${strain.name}</div>
-            <div class="shop-desc">${strain.desc} � Ernte: ${Math.round(strain.yield)} g � Dauer: ${mm}:${String(ss).padStart(2,'0')}</div>
+  function renderShop(){
+    const activeTab = document.querySelector('.shop-tab.active')?.getAttribute('data-shop-tab') || 'seeds';
+    const container = document.getElementById(`shop-${activeTab}`);
+    if(!container) return;
+    container.innerHTML = '';
+    ensureCart();
+
+    if(activeTab === 'seeds'){
+      for(const strain of STRAINS){
+        const price = nextSeedPrice(strain.id);
+        const priceLabel = fmtMoney(price);
+        const card = document.createElement('div');
+        card.className = 'shop-item';
+        const duration = strain.grow || 180;
+        const weeks = Math.ceil(duration / (24 * 7));
+        card.innerHTML = `
+          <button class="cart-add" data-cart-type="seed" data-cart-id="${strain.id}" aria-label="Zum Warenkorb hinzufügen" title="Zum Warenkorb hinzufügen">
+            <i class="fi fi-rr-shopping-cart"></i>
+          </button>
+          <div class="shop-left">
+            <div class="shop-icon">${strain.tag || '🌱'}</div>
+            <div>
+              <div class="shop-name">${strain.name}</div>
+              <div class="shop-desc">${strain.desc}<br>Ertrag: ${Math.round(strain.yield)}g | Dauer: ${weeks} Wochen | Qualität: ${Math.round(strain.quality * 100)}%</div>
+              <div class="shop-price">Preis: ${priceLabel}</div>
+            </div>
           </div>
-        </div>
-        <button class="accent" data-buy="${strain.id}">Kaufen (${fmtMoney(cost)})</button>
-      `;
-      card.querySelector('button').addEventListener('click', () => buyPlant(strain.id, selectedSlot));
-      shopEl.appendChild(card);
-      // Keine HR-Linien in Grid-Layout zwischen Karten (verursacht Verschiebungen)
-      // Zusatz: Wochenanzeige (Spielzeit) in Beschreibung hinzufuegen
-      try{
-        const desc = card.querySelector('.shop-desc');
-        if(desc){ desc.textContent = desc.textContent + ' (~ ' + strainWeeks(strain) + ' Wochen)'; }
-      }catch(_e){}
+        `;
+        container.appendChild(card);
+      }
+      return;
     }
+
+    if(activeTab === 'tools' || activeTab === 'equipment'){
+      const items = ITEMS.filter(it => it.category === activeTab);
+      for(const item of items){
+        const priceLabel = fmtMoney(item.cost);
+        const inCart = cartCount('item', item.id);
+        const owned = state.itemsOwned[item.id] || 0;
+        const limitReached = !item.stack && (owned + inCart) >= 1;
+        const card = document.createElement('div');
+        card.className = 'shop-item';
+        card.innerHTML = `
+          <button class="cart-add" data-cart-type="item" data-cart-id="${item.id}" aria-label="Zum Warenkorb hinzufügen" title="${limitReached ? 'Bereits im Besitz' : 'Zum Warenkorb hinzufügen'}" ${limitReached ? 'disabled' : ''}>
+            <i class="fi fi-rr-shopping-cart"></i>
+          </button>
+          <div class="shop-left">
+            <div class="shop-icon"><i class="${iconForItem(item.id)}"></i></div>
+            <div>
+              <div class="shop-name">${item.name}</div>
+              <div class="shop-desc">${item.desc}</div>
+              <div class="shop-price">Preis: ${priceLabel}</div>
+            </div>
+          </div>
+        `;
+        container.appendChild(card);
+      }
+      return;
+    }
+
+    if(activeTab === 'consumables'){
+      for(const pack of CONSUMABLE_PACKS){
+        const priceLabel = fmtMoney(pack.price);
+        const card = document.createElement('div');
+        card.className = 'shop-item';
+        card.innerHTML = `
+          <button class="cart-add" data-cart-type="pack" data-cart-id="${pack.id}" aria-label="Zum Warenkorb hinzufügen" title="Zum Warenkorb hinzufügen">
+            <i class="fi fi-rr-shopping-cart"></i>
+          </button>
+          <div class="shop-left">
+            <div class="shop-icon"><i class="${pack.icon}"></i></div>
+            <div>
+              <div class="shop-name">${pack.name}</div>
+              <div class="shop-desc">${pack.desc}</div>
+              <div class="shop-price">Preis: ${priceLabel}</div>
+            </div>
+          </div>
+        `;
+        container.appendChild(card);
+      }
+      return;
+    }
+  }
+
+  function ensureCart(){
+    if(!Array.isArray(state.cart)) state.cart = [];
+  }
+
+  function cartCount(type, id){
+    ensureCart();
+    return state.cart.filter(entry => entry && entry.type === type && entry.id === id).length;
+  }
+
+  function nextSeedPrice(strainId){
+    const strain = getStrain(strainId);
+    if(!strain) return 0;
+    const purchased = state.purchasedCount[strainId] || 0;
+    const inCart = cartCount('seed', strainId);
+    return Math.round((strain.cost || 0) * Math.pow(1.18, purchased + inCart));
+  }
+
+  function cartSummary(){
+    ensureCart();
+    const summaryMap = new Map();
+    const seedOffsets = {};
+    let total = 0;
+    state.cart.forEach((entry, index) => {
+      if(!entry) return;
+      const { type, id } = entry;
+      let price = 0;
+      let name = '';
+      let icon = '';
+      if(type === 'seed'){
+        const strain = getStrain(id);
+        if(!strain) return;
+        const purchased = state.purchasedCount[id] || 0;
+        const offset = seedOffsets[id] || 0;
+        price = Math.round((strain.cost || 0) * Math.pow(1.18, purchased + offset));
+        seedOffsets[id] = offset + 1;
+        name = strain.name;
+        icon = `<span>${strain.tag || '🌱'}</span>`;
+      }else if(type === 'item'){
+        const item = ITEMS.find(it => it.id === id);
+        if(!item) return;
+        price = item.cost || 0;
+        name = item.name;
+        icon = `<i class="${iconForItem(id)}"></i>`;
+      }else if(type === 'pack'){
+        const pack = (CONSUMABLE_PACKS||[]).find(p => p.id === id);
+        if(!pack) return;
+        price = pack.price || 0;
+        name = pack.name;
+        icon = `<i class="${pack.icon}"></i>`;
+      }else{
+        return;
+      }
+      total += price;
+      const key = `${type}:${id}`;
+      if(!summaryMap.has(key)){
+        summaryMap.set(key, { key, type, id, name, icon, count:0, total:0, indices:[] });
+      }
+      const summary = summaryMap.get(key);
+      summary.count += 1;
+      summary.total += price;
+      summary.indices.push(index);
+    });
+    return { total, items: Array.from(summaryMap.values()) };
+  }
+  function cartIsOpen(){
+    return !!(cartModal && cartModal.classList.contains('show'));
+  }
+
+  function openCartModal(){
+    if(cartIsOpen()) return;
+    if(!cartModal) return;
+    renderCart();
+    if(cartToggleBtn){
+      cartToggleBtn.setAttribute('aria-expanded', 'true');
+      cartToggleBtn.classList.add('is-active');
+    }
+    cartModal.hidden = false;
+    requestAnimationFrame(() => cartModal.classList.add('show'));
+  }
+
+  function closeCartModal(){
+    if(!cartIsOpen()) return;
+    if(!cartModal) return;
+    if(cartToggleBtn){
+      cartToggleBtn.setAttribute('aria-expanded', 'false');
+      cartToggleBtn.classList.remove('is-active');
+    }
+    cartModal.classList.remove('show');
+    setTimeout(() => { if(cartModal && !cartModal.classList.contains('show')) cartModal.hidden = true; }, 180);
+  }
+
+
+  function renderCart(){
+    ensureCart();
+    const count = state.cart.length;
+    const labelItems = count === 1 ? '1 Artikel' : `${count} Artikel`;
+    if(cartCountEl) cartCountEl.textContent = String(count);
+    if(cartToggleBtn){
+      cartToggleBtn.setAttribute('aria-label', `Warenkorb (${labelItems})`);
+      cartToggleBtn.classList.toggle('has-items', count > 0);
+    }
+    const { total, items } = cartSummary();
+    if(cartListEl){
+      if(items.length === 0){
+        cartListEl.classList.add('empty');
+        cartListEl.innerHTML = '<div class="cart-empty">Warenkorb leer</div>';
+      }else{
+        cartListEl.classList.remove('empty');
+        cartListEl.innerHTML = '';
+        for(const item of items){
+          const metaText = item.count > 1 ? `x${item.count}` : 'x1';
+          const node = document.createElement('div');
+          node.className = 'cart-item';
+          node.innerHTML = `
+            <div class="cart-left">
+              <div class="cart-icon">${item.icon}</div>
+              <div>
+                <div class="cart-name">${item.name}</div>
+                <div class="cart-meta">${metaText}</div>
+              </div>
+            </div>
+            <div class="cart-right">
+              <div class="cart-price">${fmtMoney(item.total)}</div>
+              <button class="ghost cart-remove" data-remove-index="${item.indices[item.indices.length - 1]}" aria-label="Entfernen">
+                <i class="fi fi-rr-cross-small"></i>
+              </button>
+            </div>
+          `;
+          cartListEl.appendChild(node);
+        }
+      }
+    }
+    if(cartTotalEl) cartTotalEl.innerHTML = fmtMoney(total);
+    if(cartCheckoutBtn) cartCheckoutBtn.disabled = total <= 0;
+    if(cartClearBtn) cartClearBtn.disabled = count === 0;
+  }
+
+
+
+  function addToCart(type, id){
+    ensureCart();
+    let name = '';
+    if(type === 'seed'){
+      const strain = getStrain(id);
+      if(!strain){ showToast('Sorte nicht gefunden.'); return; }
+      name = strain.name;
+    }else if(type === 'item'){
+      const item = ITEMS.find(it => it.id === id);
+      if(!item){ showToast('Gegenstand nicht gefunden.'); return; }
+      const owned = state.itemsOwned[item.id] || 0;
+      const inCart = cartCount('item', item.id);
+      if(!item.stack && (owned + inCart) >= 1){
+        showToast('Bereits im Besitz.');
+        return;
+      }
+      name = item.name;
+    }else if(type === 'pack'){
+      const pack = (CONSUMABLE_PACKS||[]).find(p => p.id === id);
+      if(!pack){ showToast('Paket nicht gefunden.'); return; }
+      name = pack.name;
+    }else{
+      return;
+    }
+    state.cart.push({ type, id });
+    renderShop();
+    renderItems();
+    renderCart();
+    save();
+    showToast(`${name} in den Warenkorb gelegt.`);
+  }
+
+  function removeCartEntry(index){
+    ensureCart();
+    if(index < 0 || index >= state.cart.length) return;
+    state.cart.splice(index, 1);
+    renderShop();
+    renderItems();
+    renderCart();
+    save();
+  }
+
+  function clearCart(){
+    ensureCart();
+    if(state.cart.length === 0) return;
+    state.cart = [];
+    renderShop();
+    renderItems();
+    renderCart();
+    save();
+    showToast('Warenkorb geleert.');
+  }
+
+  function checkoutCart(){
+    ensureCart();
+    if(state.cart.length === 0){ showToast('Warenkorb ist leer.'); return; }
+    const { total } = cartSummary();
+    if(total <= 0){ showToast('Keine Artikel im Warenkorb.'); return; }
+    if(state.cash < total){ showToast('Nicht genug Bargeld.'); return; }
+    state.cash -= total;
+    const entries = [...state.cart];
+    for(const entry of entries){
+      if(!entry) continue;
+      if(entry.type === 'seed'){
+        const strain = getStrain(entry.id);
+        if(!strain) continue;
+        state.purchasedCount[entry.id] = (state.purchasedCount[entry.id] || 0) + 1;
+        state.seeds[entry.id] = (state.seeds[entry.id] || 0) + 1;
+      }else if(entry.type === 'item'){
+        const item = ITEMS.find(it => it.id === entry.id);
+        if(!item) continue;
+        state.itemsOwned[entry.id] = (state.itemsOwned[entry.id] || 0) + 1;
+        if(entry.id === 'filter'){
+          if(!state.maintenance) state.maintenance = { filterPenaltyActive:false, filterNextDueAtDays:0 };
+          state.maintenance.filterPenaltyActive = false;
+          state.maintenance.filterNextDueAtDays = (state.gameDaysTotal||0) + (DAYS_PER_YEAR/2);
+        }
+      }else if(entry.type === 'pack'){
+        const pack = (CONSUMABLE_PACKS||[]).find(p => p.id === entry.id);
+        if(!pack) continue;
+        ensureConsumables();
+        const add = pack.add || {};
+        for(const key of Object.keys(add)){
+          state.consumables[key] = (state.consumables[key] || 0) + (add[key] || 0);
+        }
+      }
+    }
+    state.cart = [];
+    renderResources();
+    renderTrade();
+    renderInventory();
+    renderConsumables();
+    renderItems();
+    renderShop();
+    renderCart();
+    save();
+    showToast(`Einkauf abgeschlossen: ${fmtMoney(total)}`);
   }
 
   function renderUpgrades(){
@@ -1198,7 +1663,7 @@
       node.innerHTML = `
         <div class="upg-left">
           <div class="upg-name">${up.name}</div>
-          <div class="upg-level">Stufe ${lvl} � Bonus +${Math.round(up.inc*100)}%</div>
+          <div class="upg-level">Stufe ${lvl} Â· Bonus +${Math.round(up.inc*100)}%</div>
           <div class="hint">${up.desc}</div>
         </div>
         <button class="secondary" data-upg="${up.id}">Kaufen (${fmt(cost)} g)</button>
@@ -1225,7 +1690,7 @@
       node.innerHTML = `
         <div class="upg-left">
           <div class="upg-name">${r.name}</div>
-          <div class="upg-level">KapazitAet: ${r.slots} Slots ${!r.exhaust ? ' � keine Abluft' : ''}</div>
+          <div class="upg-level">KapazitAet: ${r.slots} Slots ${!r.exhaust ? ' Â· keine Abluft' : ''}</div>
           <div class="hint">${owned ? 'Besitzt' : 'Kosten: '+fmtMoney(r.cost)}</div>
         </div>
         <button class="secondary" ${owned?'disabled':''} data-estate="${r.id}">${owned?'Aktiv':'Kaufen'}</button>
@@ -1256,79 +1721,14 @@
   }
 
   // Research UI under its own tab or can be reused elsewhere
-  function researchAvailable(){
-    // simple derivation: 1 point per 500 g lifetime + haze points
-    const totalPoints = Math.floor((state.totalEarned||0) / 500) + (state.hazePoints||0);
-    const spent = RESEARCH_NODES.reduce((s,n)=> s + (state.research?.[n.id] ? n.cost : 0), 0);
-    return Math.max(0, totalPoints - spent);
-  }
 
-  function researchEffects(){
-    const res = state.research || {};
-    const eff = { yield:0, growth:0, quality:0, pest:0, water:0 };
-    for(const n of RESEARCH_NODES){
-      if(res[n.id]){
-        if(n.group==='yield') eff.yield += n.value;
-        if(n.group==='growth') eff.growth += n.value;
-        if(n.group==='quality') eff.quality += n.value;
-        if(n.group==='pest') eff.pest += n.value;
-        if(n.group==='water') eff.water += n.value;
-      }
-    }
-    return eff;
-  }
 
-  function renderResearch(){
-    const wrap = document.getElementById('researchList');
-    const availEl = document.getElementById('researchAvailable');
-    if(availEl) availEl.textContent = String(researchAvailable());
-    if(!wrap) return;
-    wrap.innerHTML = '';
-    const eff = researchEffects();
-    // optional header showing totals
-    const totals = document.createElement('div');
-    totals.className = 'hint';
-    totals.textContent = `Aktive Boni - Ertrag +${Math.round(eff.yield*100)}%, Wachstum +${Math.round(eff.growth*100)}%, Qualitaet +${Math.round(eff.quality*100)}%, Risiko -${Math.round(eff.pest*100)}%, Wasser -${Math.round(eff.water*100)}%`;
-    wrap.appendChild(totals);
-    for(const node of RESEARCH_NODES){
-      const owned = !!(state.research && state.research[node.id]);
-      const div = document.createElement('div');
-      div.className = 'upgrade';
-      const prereqOk = (node.requires||[]).every(id => state.research?.[id]);
-      div.innerHTML = `
-        <div class="upg-left">
-          <div class="upg-name">${node.name}</div>
-          <div class="upg-level">Kosten ${node.cost} � ${node.desc}</div>
-          <div class="hint">${prereqOk ? '' : 'Benoetigt: ' + (node.requires||[]).join(', ')}</div>
-        </div>
-        <button class="secondary" ${owned?'disabled':''} data-research="${node.id}">${owned?'Erforscht':'Freischalten'}</button>
-      `;
-      const btn = div.querySelector('button');
-      if(!owned){
-        btn.disabled = researchAvailable() < node.cost || !prereqOk;
-        btn.addEventListener('click', () => buyResearch(node.id));
-      }
-      wrap.appendChild(div);
-    }
-  }
 
-  function buyResearch(id){
-    const node = RESEARCH_NODES.find(n=>n.id===id);
-    if(!node) return;
-    if(state.research?.[id]) return;
-    const prereqOk = (node.requires||[]).every(r=> state.research?.[r]);
-    if(!prereqOk){ showToast('Voraussetzungen fehlen.'); return; }
-    if(researchAvailable() < node.cost){ showToast('Nicht genug Forschungspunkte.'); return; }
-    state.research = state.research || {};
-    state.research[id] = 1;
-    renderResearch();
-    save();
-  }
 
   function renderTrade(){
     const base = BASE_PRICE_PER_G * (state.marketMult || 1);
     const mult = itemPriceMultiplier();
-    if(basePriceEl) basePriceEl.textContent = fmtMoney(base) + '/g';
+    if(basePriceEl) basePriceEl.innerHTML = `${fmtMoney(base)}/g`;
     if(saleMultEl) saleMultEl.textContent = 'x' + mult.toFixed(2);
     // Quality factor
     const avgQ = (state.qualityPool.grams||0) > 0 ? (state.qualityPool.weighted/state.qualityPool.grams) : 1;
@@ -1336,7 +1736,7 @@
     const eff = base * mult * qMult;
     const qEl = (typeof document !== 'undefined') ? document.getElementById('qualityMult') : null;
     if(qEl) qEl.textContent = 'x' + qMult.toFixed(2);
-    if(effectivePriceEl) effectivePriceEl.textContent = fmtMoney(eff) + '/g';
+    if(effectivePriceEl) effectivePriceEl.innerHTML = `${fmtMoney(eff)}/g`;
     if(sell10Btn) sell10Btn.disabled = state.grams < 10;
     if(sell100Btn) sell100Btn.disabled = state.grams < 100;
     if(sellMaxBtn) sellMaxBtn.disabled = state.grams < 1;
@@ -1355,15 +1755,28 @@
       state.marketEventName = 'Inspektion';
       state.marketMult = 0.7;
       state.marketTimer = 20 + Math.random()*15; // 20-35s
-      showToast('Inspektion! Verkaufspreise vorUebergehend reduziert.');
+      showToast('Inspektion! Verkaufspreise vorÃ¼bergehend reduziert.');
     }else{
       state.marketEventName = 'Hype';
       state.marketMult = 1.25;
       state.marketTimer = 25 + Math.random()*20; // 25-45s
-      showToast('Hype! Verkaufspreise vorUebergehend erhoeht.');
+      showToast('Hype! Verkaufspreise vorÃ¼bergehend erhÃ¶ht.');
     }
     state.nextMarketEventIn = 90 + Math.random()*120; // next event 1.5-3.5 min
     renderTrade();
+  }
+
+  function spawnRandomEvent(){
+    const events = [
+      { type:'pest_plague', name:'Pest-Plage', desc:'Schädlinge sind aggressiver!', duration:60, effect:() => { state.pestGlobalRate = PEST_GLOBAL_RATE * 2; } },
+      { type:'harvest_blessing', name:'Ernte-Segen', desc:'Alle Erträge verdoppelt!', duration:30, effect:() => { state.harvestBonus = 2; } },
+      { type:'growth_boost', name:'Wachstums-Boost', desc:'Pflanzen wachsen schneller!', duration:45, effect:() => { state.growthBonus = 1.5; } },
+      { type:'cash_rain', name:'Geldregen', desc:'Zufällige Bargeld-Belohnungen!', duration:20, effect:() => { state.cashRain = true; } }
+    ];
+    const ev = events[Math.floor(Math.random()*events.length)];
+    state.activeEvents.push({ ...ev, duration: ev.duration });
+    ev.effect();
+    showAnnouncement(`${ev.name}: ${ev.desc}`, 5000);
   }
 
   // Quality-based pricing tiers
@@ -1387,7 +1800,7 @@
         <div class="offer-left">
           <div class="offer-qty">${offer.grams} g</div>
           <div>
-            <div>Preis: <strong>${fmtMoney(offer.pricePerG)}</strong> � Gesamt: <strong>${fmtMoney(total)}</strong></div>
+            <div>Preis: <strong>${fmtMoney(offer.pricePerG)}</strong> Â· Gesamt: <strong>${fmtMoney(total)}</strong></div>
             <div class="offer-meta">Anfrage #${offer.id}</div>
           </div>
         </div>
@@ -1418,19 +1831,22 @@
       const node = document.createElement('div');
       node.className = 'shop-item';
       const iconClass = iconForItem(it.id);
+      const inCart = cartCount('item', it.id);
+      const owned = state.itemsOwned[it.id] || 0;
+      const limitReached = !it.stack && (owned + inCart) >= 1;
       node.innerHTML = `
+        <button class="cart-add" data-cart-type="item" data-cart-id="${it.id}" aria-label="Zum Warenkorb hinzufügen" title="${limitReached ? 'Bereits im Besitz' : 'Zum Warenkorb hinzufügen'}" ${limitReached ? 'disabled' : ''}>
+          <i class="fi fi-rr-shopping-cart"></i>
+        </button>
         <div class="shop-left">
           <div class="shop-icon"><i class="${iconClass}"></i></div>
           <div>
             <div class="shop-name">${it.name}</div>
             <div class="shop-desc">${it.desc}</div>
+            <div class="shop-price">Preis: ${fmtMoney(it.cost)}</div>
           </div>
         </div>
-        <button class="secondary" data-buy-item="${it.id}">Kaufen (${fmtMoney(it.cost)})</button>
       `;
-      const btn = node.querySelector('button');
-      btn.disabled = !canBuyItem(it);
-      btn.addEventListener('click', () => buyItem(it.id));
       itemShopEl.appendChild(node);
     };
 
@@ -1438,18 +1854,18 @@
       const node = document.createElement('div');
       node.className = 'shop-item';
       node.innerHTML = `
+        <button class="cart-add" data-cart-type="pack" data-cart-id="${p.id}" aria-label="Zum Warenkorb hinzufügen" title="Zum Warenkorb hinzufügen">
+          <i class="fi fi-rr-shopping-cart"></i>
+        </button>
         <div class="shop-left">
           <div class="shop-icon"><i class="${p.icon}"></i></div>
           <div>
             <div class="shop-name">${p.name}</div>
             <div class="shop-desc">${p.desc}</div>
+            <div class="shop-price">Preis: ${fmtMoney(p.price)}</div>
           </div>
         </div>
-        <button class="secondary" data-buy-pack="${p.id}">Kaufen (${fmtMoney(p.price)})</button>
       `;
-      const btn = node.querySelector('button');
-      btn.disabled = (state.cash||0) < p.price;
-      btn.addEventListener('click', () => buyConsumablePack(p.id));
       itemShopEl.appendChild(node);
     };
 
@@ -1493,6 +1909,9 @@
       case 'irrigation': return 'fi fi-sr-water-hose';
       case 'ph_meter': return 'fi fi-sr-flask';
       case 'thermometer': return 'fi fi-sr-thermometer';
+      case 'soundscape': return 'fi fi-sr-music';
+      case 'aero_drone': return 'fi fi-sr-robot';
+      case 'brand_wall': return 'fi fi-sr-gallery';
       default: return 'fi fi-rr-box-open';
     }
   }
@@ -1509,15 +1928,15 @@
     if(beneficialChargesEl) beneficialChargesEl.textContent = String(state.consumables.beneficials || 0);
     if(buyWaterBtn){
       buyWaterBtn.disabled = state.cash < WATER_CONSUMABLE_PRICE;
-      buyWaterBtn.textContent = `Kaufen (EUR ${WATER_CONSUMABLE_PRICE})`;
+    if(buyWaterBtn){ buyWaterBtn.disabled = state.cash < WATER_CONSUMABLE_PRICE; buyWaterBtn.innerHTML = `Kaufen (${fmtMoney(WATER_CONSUMABLE_PRICE)})`; }
     }
     if(buyNutrientBtn){
       buyNutrientBtn.disabled = state.cash < NUTRIENT_CONSUMABLE_PRICE;
-      buyNutrientBtn.textContent = `Kaufen (EUR ${NUTRIENT_CONSUMABLE_PRICE})`;
+    if(buyNutrientBtn){ buyNutrientBtn.disabled = state.cash < NUTRIENT_CONSUMABLE_PRICE; buyNutrientBtn.innerHTML = `Kaufen (${fmtMoney(NUTRIENT_CONSUMABLE_PRICE)})`; }
     }
-    if(buySprayBtn){ buySprayBtn.disabled = state.cash < 9; buySprayBtn.textContent = 'Kaufen (EUR 9)'; }
-    if(buyFungicideBtn){ buyFungicideBtn.disabled = state.cash < 11; buyFungicideBtn.textContent = 'Kaufen (EUR 11)'; }
-    if(buyBeneficialBtn){ buyBeneficialBtn.disabled = state.cash < 14; buyBeneficialBtn.textContent = 'Kaufen (EUR 14)'; }
+    if(buySprayBtn){ buySprayBtn.disabled = state.cash < 9; buySprayBtn.innerHTML = `Kaufen (${fmtMoney(9)})`; }
+    if(buyFungicideBtn){ buyFungicideBtn.disabled = state.cash < 11; buyFungicideBtn.innerHTML = `Kaufen (${fmtMoney(11)})`; }
+    if(buyBeneficialBtn){ buyBeneficialBtn.disabled = state.cash < 14; buyBeneficialBtn.innerHTML = `Kaufen (${fmtMoney(14)})`; }
   }
 
   function buyConsumable(type){
@@ -1560,75 +1979,60 @@
   function renderInventory(){
     if(!inventoryEl) return;
     inventoryEl.innerHTML = '';
-    const owned = ITEMS.filter(it => (state.itemsOwned[it.id] || 0) > 0);
-    if(owned.length > 0){
-      const toolsHeader = document.createElement('div');
-      toolsHeader.className = 'hint';
-      toolsHeader.textContent = 'Gegenstaende';
-      try{ toolsHeader.style.gridColumn = '1 / -1'; }catch(_e){}
-      inventoryEl.appendChild(toolsHeader);
-      try{ const hr0 = document.createElement('hr'); hr0.className = 'sep'; hr0.style.cssText = 'border:0;border-top:1px solid #444;opacity:.5;margin:6px 0'; hr0.style.gridColumn = '1 / -1'; inventoryEl.appendChild(hr0); }catch(_e){}
-      for(const it of owned){
+
+    const ownedItems = ITEMS.filter(it => (state.itemsOwned[it.id] || 0) > 0);
+    if(ownedItems.length){
+      ownedItems.forEach(it => {
         const qty = state.itemsOwned[it.id] || 0;
         const sellPrice = Math.round(it.cost * 0.7);
         const node = document.createElement('div');
-        node.className = 'shop-item inventory-item';
+        node.className = 'inventory-item';
         node.innerHTML = `
-          <div class="shop-left">
-            <div class="shop-icon">${it.icon}</div>
-            <div>
-              <div class="shop-name">${it.name} ${qty>1 ? 'x'+qty : ''}</div>
-              <div class="shop-desc">Verkauf: ${fmtMoney(sellPrice)}</div>
-            </div>
+          <div class="inventory-icon"><i class="${iconForItem(it.id)}"></i></div>
+          <div class="inventory-main">
+            <div class="job-title">${it.name} ${qty>1 ? '×'+qty : ''}</div>
+            <p class="inventory-meta">${it.desc}</p>
           </div>
-          <button class="ghost danger" data-sell-item="${it.id}">Verkaufen</button>
-        `;
+          <div class="inventory-actions">
+            <span class="inventory-qty">Verkauf: ${fmtMoney(sellPrice)}</span>
+            <button class="ghost" data-sell-item="${it.id}">Verkaufen</button>
+          </div>`;
         node.querySelector('button').addEventListener('click', () => sellItem(it.id));
         inventoryEl.appendChild(node);
-      }
+      });
     }
-    // Verbrauchsgegenstaende anzeigen (ohne Wasserkanister)
+
     ensureConsumables();
     const cons = state.consumables || {};
-    const consEntries = [
-      { key:'nutrient', label:'Naehrstoffe' },
-      { key:'pgr', label:'PGR Booster' },
-      { key:'spray', label:'Schaedlingsspray' },
-      { key:'fungicide', label:'Fungizid' },
-      { key:'beneficials', label:'Nuetzlinge' },
+    const consumableEntries = [
+      { key:'nutrient', label:'Nährstoffe', icon: 'fi fi-sr-flask' },
+      { key:'pgr', label:'PGR Booster', icon: 'fi fi-sr-bolt' },
+      { key:'spray', label:'Schädlingsspray', icon: 'fi fi-sr-bug' },
+      { key:'fungicide', label:'Fungizid', icon: 'fi fi-sr-shield-plus' },
+      { key:'beneficials', label:'Nützlinge', icon: 'fi fi-sr-leaf' }
     ];
-    const consList = consEntries.filter(e => (cons[e.key]||0) > 0);
-    const anyCons = consList.length > 0;
-    if(anyCons){
-      // Trenner zwischen Gruppen, falls Items vorhanden (volle Grid-Breite)
-      if(owned.length > 0){ try{ const hrGrp = document.createElement('hr'); hrGrp.className = 'sep'; hrGrp.style.cssText = 'border:0;border-top:1px solid #555;opacity:.6;margin:8px 0'; hrGrp.style.gridColumn = '1 / -1'; inventoryEl.appendChild(hrGrp); }catch(_e){} }
-      const cHeader = document.createElement('div');
-      cHeader.className = 'hint';
-      cHeader.textContent = 'Verbrauchsgegenstaende';
-      try{ cHeader.style.gridColumn = '1 / -1'; }catch(_e){}
-      inventoryEl.appendChild(cHeader);
-      try{ const hrc = document.createElement('hr'); hrc.className = 'sep'; hrc.style.cssText = 'border:0;border-top:1px solid #444;opacity:.5;margin:6px 0'; hrc.style.gridColumn = '1 / -1'; inventoryEl.appendChild(hrc); }catch(_e){}
-      for(let i=0;i<consList.length;i++){
-        const e = consList[i];
-        const cnt = cons[e.key] || 0;
+    const availableConsumables = consumableEntries.filter(entry => (cons[entry.key]||0) > 0);
+    if(availableConsumables.length){
+      availableConsumables.forEach(entry => {
         const node = document.createElement('div');
-        node.className = 'shop-item inventory-item';
+        node.className = 'inventory-item';
         node.innerHTML = `
-          <div class="shop-left">
-            <div class="shop-icon">VC</div>
-            <div>
-              <div class="shop-name">${e.label}</div>
-              <div class="shop-desc">Bestand: ${cnt}</div>
-            </div>
+          <div class="inventory-icon"><i class="${entry.icon}"></i></div>
+          <div class="inventory-main">
+            <div class="job-title">${entry.label}</div>
+            <p class="inventory-meta">Lagerbestand für Automatisierung und Boosts.</p>
           </div>
-        `;
+          <div class="inventory-actions">
+            <span class="inventory-qty">${cons[entry.key]} Einheiten</span>
+          </div>`;
         inventoryEl.appendChild(node);
-      }
+      });
     }
-    if(owned.length === 0 && !anyCons){
+
+    if(!ownedItems.length && availableConsumables.length === 0){
       const empty = document.createElement('div');
-      empty.className = 'hint';
-      empty.textContent = 'Keine Artikel vorhanden.';
+      empty.className = 'inventory-item';
+      empty.innerHTML = '<p class="inventory-meta">Noch keine Gegenstände im Inventar.</p>';
       inventoryEl.appendChild(empty);
     }
   }
@@ -1645,7 +2049,7 @@
     showSeedSelection(slotIndex);
     return;
   }
-  showToast("Keine Samen. Oeffne Growmarkt -");
+  showToast("Keine Samen. Ã–ffne Growmarkt -");
   try{ document.querySelector('.tab-btn[data-tab="trade"]').click(); }catch(_e){}
   renderShop(slotIndex);
 }/*
@@ -1666,6 +2070,12 @@
   }
 
   function removePlant(slotIndex){
+    const plant = state.plants.find(p => p.slot === slotIndex);
+    if (plant) {
+      const strainId = plant.strainId;
+      state.seeds[strainId] = (state.seeds[strainId] || 0) + 1;
+      showToast(`Samen von ${getStrain(strainId).name} zurueck ins Inventar gelegt.`);
+    }
     state.plants = state.plants.filter(p => p.slot !== slotIndex);
     renderSlots();
     save();
@@ -1719,7 +2129,7 @@
     const plant = state.plants.find(p => p.slot === slotIndex);
     if(!plant) return;
     ensureConsumables();
-    if(state.consumables.water <= 0){ showToast('Kein Wasserkanister verfUegbar.'); return; }
+    if(state.consumables.water <= 0){ showToast('Kein Wasserkanister verfÃ¼gbar.'); return; }
     state.consumables.water -= 1;
     plant.water = Math.min(WATER_MAX, plant.water + WATER_ADD_AMOUNT);
     updateProgressBars();
@@ -1732,7 +2142,7 @@
     const plant = state.plants.find(p => p.slot === slotIndex);
     if(!plant) return;
     ensureConsumables();
-    if(state.consumables.nutrient <= 0){ showToast('Kein DUengerpaket verfUegbar.'); return; }
+    if(state.consumables.nutrient <= 0){ showToast('Kein DÃ¼ngerpaket verfÃ¼gbar.'); return; }
     state.consumables.nutrient -= 1;
     plant.nutrients = Math.min(NUTRIENT_MAX, plant.nutrients + NUTRIENT_ADD_AMOUNT);
     plant.quality = clamp(plant.quality + 0.04, 0.4, 1.5);
@@ -1744,7 +2154,7 @@
 
   function treatPlant(slotIndex){
     const plant = state.plants.find(p => p.slot === slotIndex);
-    if(!plant || !plant.pest){ showToast('Keine SchAedlinge vorhanden.'); return; }
+    if(!plant || !plant.pest){ showToast('Keine SchÃ¤dlinge vorhanden.'); return; }
     ensureConsumables();
     const type = plant.pest.id;
     if(type === 'mold' || type === 'root_rot' || type === 'leaf_rot'){
@@ -1752,7 +2162,7 @@
         state.consumables.fungicide -= 1;
         plant.pest = null;
         spawnBurst(slotIndex, '???', 6);
-      } else { showToast('Fungizid benoetigt.'); return; }
+      } else { showToast('Fungizid benÃ¶tigt.'); return; }
     } else if(type === 'mites' || type === 'thrips'){
       if(state.consumables.spray > 0){
         state.consumables.spray -= 1;
@@ -1973,7 +2383,7 @@
     if(feedBtn){
       if(nutrientCharges <= 0){
         feedBtn.disabled = true;
-        feedBtn.title = 'Kein DUengerpaket - im Handel kaufen';
+        feedBtn.title = 'Kein DÃ¼ngerpaket - im Handel kaufen';
       }else{
         feedBtn.disabled = false;
         feedBtn.title = `Duengen (Pakete: ${nutrientCharges})`;
@@ -1982,7 +2392,7 @@
     if(pestBtn){
       const infected = !!plant.pest;
       pestBtn.disabled = !(infected && anyPestCharges > 0);
-      pestBtn.title = infected ? (anyPestCharges>0 ? 'Abwehr einsetzen' : 'Keine Abwehr vorraetig') : 'Keine SchAedlinge';
+      pestBtn.title = infected ? (anyPestCharges>0 ? 'Abwehr einsetzen' : 'Keine Abwehr vorrÃ¤tig') : 'Keine SchÃ¤dlinge';
     }
   }
 
@@ -2003,10 +2413,28 @@
     if(!fx) return;
     const el = document.createElement('div');
     el.className = 'float';
-    el.textContent = text;
+    el.innerHTML = text;
     el.style.top = '45%';
     fx.appendChild(el);
     setTimeout(() => el.remove(), 900);
+  }
+
+  function showFloat(text, type='default'){
+    const el = document.createElement('div');
+    el.className = 'global-float';
+    el.innerHTML = text;
+    el.style.position = 'fixed';
+    el.style.left = Math.random() * 80 + 10 + '%';
+    el.style.top = Math.random() * 60 + 20 + '%';
+    el.style.color = type === 'cash' ? '#FFD700' : '#eafff2';
+    el.style.fontWeight = 'bold';
+    el.style.fontSize = '18px';
+    el.style.textShadow = '0 2px 8px rgba(0,0,0,.5)';
+    el.style.pointerEvents = 'none';
+    el.style.zIndex = '1000';
+    el.style.animation = 'globalFloatUp 2s ease-out forwards';
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 2000);
   }
 
   function spawnBurst(slotIndex, symbol='??', count=6){
@@ -2028,15 +2456,198 @@
     }
   }
 
+  function renderEmployees(){
+    const wrap = document.getElementById('employeesList');
+    if(!wrap) return;
+    wrap.innerHTML = '';
+    for(const emp of EMPLOYEES){
+      const empData = state.employees[emp.id] || {};
+      const hired = empData.hired;
+      const level = empData.level || 1;
+      const div = document.createElement('div');
+      div.className = 'employee-card';
+      const upgradeCost = hired ? Math.round(emp.salary * level * 2) : 0;
+      div.innerHTML = `
+        <div class="employee-image">
+          <img src="${emp.image}" alt="${emp.name}" />
+        </div>
+        <div class="employee-info">
+          <div class="employee-name">${emp.name} ${hired ? `(Lv.${level})` : ''}</div>
+          <div class="employee-desc">${emp.desc}</div>
+          <div class="employee-details">Gehalt: ${fmtMoney(emp.salary)}/Monat Â· Aufgaben: ${emp.tasks.join(', ')} ${hired ? `Â· Effizienz: +${(level-1)*10}%` : ''}</div>
+          <div class="employee-actions">
+            ${!hired ? `<button class="secondary" data-hire-emp="${emp.id}">Einstellen</button>` : `<button class="accent" data-upgrade-emp="${emp.id}">Upgrade (${fmt(upgradeCost)}g)</button>`}
+          </div>
+        </div>
+      `;
+      const hireBtn = div.querySelector('[data-hire-emp]');
+      if(hireBtn){
+        hireBtn.disabled = state.cash < emp.salary;
+        hireBtn.addEventListener('click', () => hireEmployee(emp.id));
+      }
+      const upgradeBtn = div.querySelector('[data-upgrade-emp]');
+      if(upgradeBtn){
+        upgradeBtn.disabled = state.grams < upgradeCost;
+        upgradeBtn.addEventListener('click', () => upgradeEmployee(emp.id));
+      }
+      wrap.appendChild(div);
+    }
+  }
+
+  function hireEmployee(id){
+    const emp = EMPLOYEES.find(e => e.id === id);
+    if(!emp) return;
+    if(state.employees[id] && state.employees[id].hired) return;
+    if(state.cash < emp.salary){ showToast('Nicht genug Bargeld.'); return; }
+    state.cash -= emp.salary;
+    state.employees[id] = { hired: true, level: 1 };
+    renderResources();
+    renderEmployees();
+    save();
+    showToast(`${emp.name} eingestellt.`);
+  }
+
+  function upgradeEmployee(id){
+    const emp = EMPLOYEES.find(e => e.id === id);
+    if(!emp || !state.employees[id] || !state.employees[id].hired) return;
+    const currentLevel = state.employees[id].level || 1;
+    const cost = Math.round(emp.salary * currentLevel * 2);
+    if(state.grams < cost){ showToast('Nicht genug Ertrag.'); return; }
+    state.grams -= cost;
+    state.employees[id].level = currentLevel + 1;
+    renderResources();
+    renderEmployees();
+    save();
+    showToast(`${emp.name} auf Level ${currentLevel + 1} upgegradet.`);
+  }
+
+  function employeeActions(dt){
+    // Simple automation: every few seconds, perform tasks
+    if(!state._empTimer) state._empTimer = 0;
+    state._empTimer += dt;
+    if(state._empTimer < 5) return; // every 5 seconds
+    state._empTimer = 0;
+
+    for(const emp of EMPLOYEES){
+      if(!state.employees[emp.id]) continue;
+      for(const task of emp.tasks){
+        performEmployeeTask(task);
+      }
+    }
+  }
+
+  function performEmployeeTask(task){
+    const plants = state.plants.filter(p => p.health > 0);
+    if(plants.length === 0) return;
+    const plant = plants[Math.floor(Math.random() * plants.length)]; // random plant
+    const slot = plant.slot;
+    // Find employee level for this task
+    let empLevel = 1;
+    for(const emp of EMPLOYEES){
+      if(emp.tasks.includes(task) && state.employees[emp.id] && state.employees[emp.id].hired){
+        empLevel = state.employees[emp.id].level || 1;
+        break;
+      }
+    }
+    const efficiency = 1 + (empLevel - 1) * 0.1; // +10% per level
+    if(task === 'water'){
+      if(plant.water < WATER_MAX * 0.5 && (state.itemsOwned['watering_can']||0) > 0){
+        plant.water = Math.min(WATER_MAX, plant.water + WATER_ADD_AMOUNT * 0.5 * efficiency);
+      }
+    }else if(task === 'feed'){
+      ensureConsumables();
+      if(plant.nutrients < NUTRIENT_MAX * 0.5 && state.consumables.nutrient > 0){
+        state.consumables.nutrient -= 1;
+        plant.nutrients = Math.min(NUTRIENT_MAX, plant.nutrients + NUTRIENT_ADD_AMOUNT * efficiency);
+        plant.quality = clamp(plant.quality + 0.02 * efficiency, 0.4, 1.5);
+      }
+    }else if(task === 'harvest'){
+      if(plant.growProg >= 1 && (state.itemsOwned['shears']||0) > 0){
+        harvestPlant(slot);
+      }
+    }else if(task === 'treat'){
+      if(plant.pest && state.consumables.spray > 0){
+        treatPlant(slot);
+      }
+    }
+  }
+
+  function breedStrains(parent1Id, parent2Id){
+    const p1 = getStrain(parent1Id);
+    const p2 = getStrain(parent2Id);
+    if(!p1 || !p2) return null;
+    const newId = `hybrid_${parent1Id}_${parent2Id}_${Date.now()}`;
+    const newName = `${p1.name} x ${p2.name}`;
+    const newYield = Math.round((p1.yield + p2.yield) / 2 * 1.2); // hybrid vigor
+    const newGrow = Math.round((p1.grow + p2.grow) / 2 * 0.9);
+    const newQuality = (p1.quality + p2.quality) / 2 + 0.1;
+    const newStrain = {
+      id: newId,
+      name: newName,
+      tag: 'HY',
+      cost: Math.round((p1.cost + p2.cost) / 2 * 1.5),
+      yield: newYield,
+      grow: newGrow,
+      quality: newQuality,
+      yieldBonus: (p1.yieldBonus + p2.yieldBonus) / 2 + 0.1,
+      offerBonus: (p1.offerBonus + p2.offerBonus) / 2 + 0.1,
+      desc: `Hybrid aus ${p1.name} und ${p2.name}`,
+      base: 'assets/plants/greengelato' // placeholder
+    };
+    state.customStrains.push(newStrain);
+    state.seeds[newId] = (state.seeds[newId] || 0) + 1;
+    return newStrain;
+  }
+
+  let breedingSlots = { parent1: null, parent2: null };
+
+  function renderBreeding(){
+    const wrap = document.getElementById('breedingInterface');
+    if(!wrap) return;
+    const resultPreview = document.getElementById('resultPreview');
+    const breedBtn = document.getElementById('breedBtn');
+
+    // Update slots
+    for(let i=1; i<=2; i++){
+      const slotEl = document.querySelector(`.breeding-slot[data-parent="${i}"]`);
+      const strainId = breedingSlots[`parent${i}`];
+      if(strainId){
+        const strain = getStrain(strainId);
+        slotEl.className = 'breeding-slot filled';
+        slotEl.innerHTML = `<div class="strain-info">${strain.name}</div><button class="remove-seed" data-remove-parent="${i}">X</button>`;
+      } else {
+        slotEl.className = 'breeding-slot empty';
+        slotEl.innerHTML = '<div class="slot-label">Samen setzen</div>';
+      }
+    }
+
+    // Update preview
+    const p1 = breedingSlots.parent1;
+    const p2 = breedingSlots.parent2;
+    if(p1 && p2 && p1 !== p2){
+      const s1 = getStrain(p1);
+      const s2 = getStrain(p2);
+      const newName = `${s1.name} x ${s2.name}`;
+      if(resultPreview) resultPreview.textContent = `Neue Sorte: ${newName}`;
+      if(breedBtn) breedBtn.disabled = false;
+    } else {
+      if(resultPreview) resultPreview.textContent = 'Setze zwei verschiedene Samen';
+      if(breedBtn) breedBtn.disabled = true;
+    }
+  }
+
   function renderAll(){
     renderSlots();
     renderShop();
+    renderCart();
     renderResources();
     renderUpgrades();
     renderStats();
     renderTrade();
     renderSettings();
     renderResearch();
+    renderEmployees();
+    renderBreeding();
     renderGameTime();
     if(unlockCostEl) unlockCostEl.textContent = state.slotsUnlocked >= MAX_SLOTS ? 'max' : fmt(slotUnlockCost(state.slotsUnlocked));
   }
@@ -2071,7 +2682,7 @@
         <div class="offer-left">
           <div class="offer-qty">${o.grams} g</div>
           <div>
-            <div>${strain.name} � Preis: <strong>${fmtMoney(o.pricePerG)}</strong> � Gesamt: <strong>${fmtMoney(total)}</strong></div>
+            <div>${strain.name} Â· Preis: <strong>${fmtMoney(o.pricePerG)}</strong> Â· Gesamt: <strong>${fmtMoney(total)}</strong></div>
             <div class="offer-meta">Auftrag #${o.id}</div>
           </div>
         </div>
@@ -2135,24 +2746,62 @@
   }
 
   function initTabs(){
-    $$('.tab-btn').forEach(btn => {
+    const buttons = Array.from($$('.tab-btn'));// ensure static list
+    if(buttons.length === 0) return;
+    const nav = document.getElementById('sidebar');
+    let highlight = null;
+    if(nav){
+      highlight = nav.querySelector('.tab-highlight');
+      if(!highlight){
+        highlight = document.createElement('div');
+        highlight.className = 'tab-highlight';
+        nav.appendChild(highlight);
+      }
+    }
+    let activeBtn = buttons.find(btn => btn.classList.contains('active')) || buttons[0];
+    const moveHighlight = (target) => {
+      if(!highlight || !nav || !target) return;
+      const navRect = nav.getBoundingClientRect();
+      const btnRect = target.getBoundingClientRect();
+      window.requestAnimationFrame(() => {
+        highlight.style.height = `${btnRect.height}px`;
+        highlight.style.transform = `translateY(${btnRect.top - navRect.top}px)`;
+        highlight.classList.add('show');
+      });
+    };
+    const activateTab = (btn) => {
+      if(!btn) return;
+      buttons.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const id = btn.dataset.tab;
+      $$('.tab').forEach(tab => tab.classList.remove('active'));
+      const panel = document.querySelector(`#tab-${id}`);
+      if(panel) panel.classList.add('active');
+      if(id === 'trade' || id === 'market') renderTrade();
+      if(id === 'trade') renderShop();
+      if(id === 'settings') renderSettings();
+      if(id === 'research') renderResearch();
+      if(id === 'inventory') renderInventory();
+      if(id === 'estate') renderEstate();
+      if(id === 'jobs') renderJobs();
+      if(id === 'inbox') renderInbox();
+      if(id === 'employees') renderEmployees();
+      if(id === 'breeding') renderBreeding();
+      activeBtn = btn;
+      moveHighlight(btn);
+    };
+    buttons.forEach(btn => {
       btn.addEventListener('click', () => {
-        $$('.tab-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        const id = btn.dataset.tab;
-        $$('.tab').forEach(tab => tab.classList.remove('active'));
-        const panel = document.querySelector(`#tab-${id}`);
-        if(panel) panel.classList.add('active');
-        if(id === 'trade' || id === 'market') renderTrade();
-        if(id === 'trade') renderShop();
-        if(id === 'settings') renderSettings();
-        if(id === 'research') renderResearch();
-        if(id === 'inventory') renderInventory();
-        if(id === 'estate') renderEstate();
-        if(id === 'jobs') renderJobs();
-        if(id === 'inbox') renderInbox();
+        if(btn === activeBtn) return;
+        activateTab(btn);
       });
     });
+    if(activeBtn){
+      if(!activeBtn.classList.contains('active')) activateTab(activeBtn);
+      moveHighlight(activeBtn);
+    }
+    window.addEventListener('resize', () => moveHighlight(activeBtn));
+    window.__updateTabHighlight = () => moveHighlight(activeBtn);
   }
 
   function applyTheme(){
@@ -2167,6 +2816,34 @@
       state.theme = themeToggle.checked ? 'light' : 'dark';
       applyTheme();
       save();
+    });
+  }
+
+  function initAmbientLayer(){
+    const wrap = document.querySelector('.ambient-orbs');
+    if(!wrap || wrap.dataset.enhanced === '1') return;
+    wrap.dataset.enhanced = '1';
+    const orbs = Array.from(wrap.querySelectorAll('.orb'));// existing seeded in markup
+    const desired = Math.max(6, orbs.length);
+    while(orbs.length < desired){
+      const span = document.createElement('span');
+      span.className = 'orb';
+      wrap.appendChild(span);
+      orbs.push(span);
+    }
+    const randomize = (orb) => {
+      const dur = 16 + Math.random()*12;
+      const delay = -Math.random()*dur;
+      const hue = Math.floor(Math.random()*60) - 15;
+      const opacity = (0.25 + Math.random()*0.4).toFixed(2);
+      orb.style.animationDuration = `${dur}s`;
+      orb.style.animationDelay = `${delay}s`;
+      orb.style.opacity = opacity;
+      orb.style.setProperty('--orb-hue', `${hue}deg`);
+    };
+    orbs.forEach(orb => {
+      randomize(orb);
+      orb.addEventListener('animationiteration', () => randomize(orb));
     });
   }
 
@@ -2214,6 +2891,7 @@
     for(const plant of state.plants){
       advancePlant(plant, worldDt);
     }
+    employeeActions(worldDt);
 
     const perSec = computePerSec();
     if(perSec > state.bestPerSec) state.bestPerSec = perSec;
@@ -2267,10 +2945,39 @@
       if(state.nextMarketEventIn <= 0){
         spawnMarketEvent();
         try{
-          const msg = (state.marketEventName||'') === 'Inspektion' ? 'Inspektion! Preise kurzzeitig reduziert' : 'Hype! Preise kurzzeitig erhoeht';
+          const msg = (state.marketEventName||'') === 'Inspektion' ? 'Inspektion! Preise kurzzeitig reduziert' : 'Hype! Preise kurzzeitig erhÃ¶ht';
           showAnnouncement(msg);
         }catch(_e){}
       }
+    }
+
+    // Random game events
+    if(!state.nextGameEventIn) state.nextGameEventIn = 300 + Math.random()*600; // 5-15 min
+    state.nextGameEventIn -= worldDt;
+    if(state.nextGameEventIn <= 0){
+      spawnRandomEvent();
+      state.nextGameEventIn = 300 + Math.random()*600;
+    }
+    // Update active events
+    state.activeEvents = state.activeEvents.filter(ev => {
+      ev.duration -= worldDt;
+      if(ev.duration <= 0){
+        // End event
+        if(ev.type === 'pest_plague') state.pestGlobalRate = PEST_GLOBAL_RATE;
+        if(ev.type === 'harvest_blessing') state.harvestBonus = 1;
+        if(ev.type === 'growth_boost') state.growthBonus = 1;
+        if(ev.type === 'cash_rain') state.cashRain = false;
+        showToast(`Event "${ev.name}" beendet.`);
+        return false;
+      }
+      return true;
+    });
+
+    // Cash rain effect
+    if(state.cashRain && Math.random() < 0.1 * worldDt){ // ~10% chance per second
+      const bonus = Math.floor(Math.random() * 50) + 10;
+      state.cash += bonus;
+      showFloat(fmtMoney(bonus, { showPlus:true }), 'cash');
     }
 
     saveTicker += dt;
@@ -2317,7 +3024,172 @@
     if(diffEasy) diffEasy.addEventListener('click', () => setDifficulty('easy'));
     if(diffNormal) diffNormal.addEventListener('click', () => setDifficulty('normal'));
     if(diffHard) diffHard.addEventListener('click', () => setDifficulty('hard'));
+    // Breeding
+    document.addEventListener('click', (e) => {
+      const target = e.target;
+      if(target.classList.contains('cart-add') || target.closest('.cart-add')){
+        const btn = target.closest('.cart-add');
+        if(btn){
+          const type = btn.getAttribute('data-cart-type');
+          const id = btn.getAttribute('data-cart-id');
+          addToCart(type, id);
+          e.preventDefault();
+          e.stopPropagation();
+          return;
+        }
+      }
+      if(target.classList.contains('cart-remove') || target.closest('.cart-remove')){
+        const btn = target.closest('.cart-remove');
+        if(btn){
+          const idx = parseInt(btn.getAttribute('data-remove-index') || '-1', 10);
+          if(idx >= 0){
+            removeCartEntry(idx);
+          }
+          e.preventDefault();
+          e.stopPropagation();
+          return;
+        }
+      }
+      if(target.classList.contains('breeding-slot') || target.closest('.breeding-slot')){
+        const slot = target.closest('.breeding-slot');
+        if(slot){
+          const parent = slot.getAttribute('data-parent');
+          showSeedSelectionForBreeding(parent);
+        }
+      }
+      if(target.classList.contains('remove-seed') || target.closest('.remove-seed')){
+        const btn = target.closest('.remove-seed');
+        if(btn){
+          const parent = btn.getAttribute('data-remove-parent');
+          breedingSlots[`parent${parent}`] = null;
+          renderBreeding();
+        }
+      }
+      // Right panel toggle
+      if(target.id === 'rightPanelToggle' || target.closest('#rightPanelToggle')){
+        const panel = document.getElementById('rightPanel');
+        if(panel){
+          const isCollapsed = panel.classList.toggle('collapsed');
+          if(rightPanelToggleBtn){
+            rightPanelToggleBtn.setAttribute('aria-expanded', isCollapsed ? 'false' : 'true');
+            rightPanelToggleBtn.setAttribute('title', isCollapsed ? 'Premium Panel oeffnen' : 'Premium Panel schliessen');
+          }
+          e.preventDefault();
+        }
+      }
+      // Panel tabs
+      if(target.classList.contains('panel-tab') || target.closest('.panel-tab')){
+        const tab = target.closest('.panel-tab');
+        if(tab){
+          const tabName = tab.getAttribute('data-panel-tab');
+          switchPanelTab(tabName);
+        }
+      }
+      // Shop tabs
+      if(target.classList.contains('shop-tab') || target.closest('.shop-tab')){
+        const tab = target.closest('.shop-tab');
+        if(tab){
+          const tabName = tab.getAttribute('data-shop-tab');
+          switchShopTab(tabName);
+          e.preventDefault();
+          e.stopPropagation();
+          return;
+        }
+      }
+    });
+    if(cartToggleBtn) cartToggleBtn.addEventListener('click', (ev) => {
+      ev.preventDefault();
+      if(cartIsOpen()) closeCartModal(); else openCartModal();
+    });
+    if(cartCloseBtn) cartCloseBtn.addEventListener('click', closeCartModal);
+    if(cartModal){
+      cartModal.addEventListener('click', (ev) => {
+        if(ev.target === cartModal) closeCartModal();
+      });
+    }
+    document.addEventListener('keydown', (ev) => {
+      if(ev.key === 'Escape' && cartIsOpen()) closeCartModal();
+    });
+    if(rightPanelToggleBtn){
+      const panel = document.getElementById('rightPanel');
+      const isCollapsed = panel ? panel.classList.contains('collapsed') : false;
+      rightPanelToggleBtn.setAttribute('aria-expanded', isCollapsed ? 'false' : 'true');
+      rightPanelToggleBtn.setAttribute('title', isCollapsed ? 'Premium Panel oeffnen' : 'Premium Panel schliessen');
+    }
+    if(cartCheckoutBtn) cartCheckoutBtn.addEventListener('click', checkoutCart);
+    if(cartClearBtn) cartClearBtn.addEventListener('click', () => { clearCart(); });
+    const breedBtn = document.getElementById('breedBtn');
+    if(breedBtn) breedBtn.addEventListener('click', performBreeding);
     setInterval(renderStats, 1000);
+  }
+
+  function showSeedSelectionForBreeding(parentNum){
+    if(!seedModal || !seedListEl || !seedConfirmBtn || !seedCancelBtn) return;
+    seedListEl.innerHTML = '';
+    const s = state.seeds || {};
+    const keys = Object.keys(s).filter(k => (s[k]||0) > 0);
+    if(keys.length === 0){ showToast('Keine Samen vorhanden.'); return; }
+    keys.forEach(id => {
+      const strain = getStrain(id);
+      const div = document.createElement('div');
+      div.className = 'shop-item';
+      div.innerHTML = `
+        <div class="shop-left">
+          <div class="shop-icon">${strain.tag || '??'}</div>
+          <div>
+            <div class="shop-name">${strain.name || id}</div>
+            <div class="shop-desc">Bestand: ${(s[id]||0)}</div>
+          </div>
+        </div>
+        <button class="secondary" data-choose-breeding="${id}" data-parent="${parentNum}">Auswaehlen</button>
+      `;
+      div.querySelector('button').addEventListener('click', (e) => {
+        const strainId = e.target.getAttribute('data-choose-breeding');
+        const parent = e.target.getAttribute('data-parent');
+        breedingSlots[`parent${parent}`] = strainId;
+        renderBreeding();
+        closeSeedSelection();
+      });
+      seedListEl.appendChild(div);
+    });
+    seedConfirmBtn.style.display = 'none';
+    seedModal.hidden = false; seedModal.classList.add('show');
+  }
+
+  function performBreeding(){
+    const p1 = breedingSlots.parent1;
+    const p2 = breedingSlots.parent2;
+    if(!p1 || !p2) return;
+    const newStrain = breedStrains(p1, p2);
+    if(newStrain){
+      showToast(`Neue Sorte erstellt: ${newStrain.name}`);
+      breedingSlots = { parent1: null, parent2: null }; // Clear slots
+      renderBreeding();
+      renderShop();
+    }
+  }
+
+  function switchPanelTab(tabName){
+    const tabs = document.querySelectorAll('.panel-tab');
+    const sections = document.querySelectorAll('.panel-section');
+    tabs.forEach(t => t.classList.remove('active'));
+    sections.forEach(s => s.classList.remove('active'));
+    const activeTab = document.querySelector(`[data-panel-tab="${tabName}"]`);
+    const activeSection = document.getElementById(`panel-${tabName}`);
+    if(activeTab) activeTab.classList.add('active');
+    if(activeSection) activeSection.classList.add('active');
+  }
+
+  function switchShopTab(tabName){
+    const tabs = document.querySelectorAll('.shop-tab');
+    const categories = document.querySelectorAll('.shop-category');
+    tabs.forEach(t => t.classList.remove('active'));
+    categories.forEach(c => c.classList.remove('active'));
+    const activeTab = document.querySelector(`[data-shop-tab="${tabName}"]`);
+    const activeCategory = document.getElementById(`shop-${tabName}`);
+    if(activeTab) activeTab.classList.add('active');
+    if(activeCategory) activeCategory.classList.add('active');
+    renderShop(); // Re-render shop for the active category
   }
 
   function start(){
@@ -2337,15 +3209,10 @@
         }
       });
     }catch(_e){}
-    // Switch research functions to new tree before first render
-    try{
-      if(typeof researchEffectsV2 === 'function'){ researchEffects = researchEffectsV2; }
-      if(typeof researchAvailableV2 === 'function'){ researchAvailable = researchAvailableV2; }
-      if(typeof renderResearchV2 === 'function'){ renderResearch = renderResearchV2; }
-      if(typeof buyResearchV2 === 'function'){ buyResearch = buyResearchV2; }
-    }catch(_e){}
+
     initThemeToggle();
     initTabs();
+    initAmbientLayer();
     bindGlobal();
     // Delegate confirmations for remove/upgrade once
     try{
@@ -2428,53 +3295,6 @@ try{
   buyConsumable = function(type){
     if(type === 'water'){ showToast('Wasserkanister entfernt - bitte Giesskanne nutzen.'); return; }
     return __orig_buyConsumable(type);
-  }
-}catch(_e){}
-
-// Jobs: limit applications to 2, grey-out locked, add header with current job
-function enhanceJobsUI(){
-  try{
-    const wrap = document.getElementById('jobsList');
-    if(!wrap) return;
-    // Header
-    const current = (JOBS.find(j=>j.id===state.jobId)?.name) || 'Keiner';
-    const pendingCount = (state.applications||[]).length;
-    const head = document.createElement('div'); head.className = 'hint'; head.textContent = `Aktueller Job: ${current} - Bewerbungen: ${pendingCount}/2`;
-    wrap.prepend(head);
-    // Grey out locked and disable apply
-    const lvl = state.level || 1;
-    wrap.querySelectorAll('.upgrade').forEach(div => {
-      const btn = div.querySelector('[data-apply-job]');
-      if(!btn) return;
-      const id = btn.getAttribute('data-apply-job');
-      const job = JOBS.find(j=>j.id===id);
-      if(!job) return;
-      const eligible = lvl >= (job.reqLevel||1);
-      if(!eligible){
-        div.style.opacity = '0.45';
-        div.style.filter = 'grayscale(1)';
-        btn.disabled = true;
-        btn.title = `Erfordert Lvl ${job.reqLevel}`;
-      }
-    });
-  }catch(_e){}
-}
-
-try{
-  const __orig_renderJobs = renderJobs;
-  renderJobs = function(){
-    __orig_renderJobs();
-    enhanceJobsUI();
-  }
-}catch(_e){}
-
-try{
-  const __orig_confirmApply = confirmApply;
-  confirmApply = function(jobId){
-    const apps = state.applications || [];
-    if(apps.some(a=>a.jobId===jobId)){ showToast('Bereits beworben.'); return; }
-    if(apps.length >= 2){ showToast('Max. 2 Bewerbungen gleichzeitig.'); return; }
-    return __orig_confirmApply(jobId);
   }
 }catch(_e){}
 
@@ -2562,22 +3382,26 @@ try{
   };
 }catch(_e){}
   // === Research (new tree) - Implementation ===
-  function researchAvailableV2(){
+  function researchAvailable(){
     const totalPoints = Math.floor((state.totalEarned||0) / 500) + (state.hazePoints||0);
     let spent = 0;
-    for(const b of RESEARCH_BRANCHES){
-      for(const n of b.nodes){ if(state.research?.[n.id]) spent += n.cost; }
+    for(const branchKey in RESEARCH_TREE){
+      const branch = RESEARCH_TREE[branchKey];
+      for(const nodeKey in branch.nodes){
+        if(state.research?.[nodeKey]) spent += branch.nodes[nodeKey].cost;
+      }
     }
     return Math.max(0, totalPoints - spent);
   }
 
-  function researchEffectsV2(){
+  function researchEffects(){
     const res = state.research || {};
-    const eff = { yield:0, growth:0, quality:0, pest:0, water:0, cost:0, pest_mold:0 };
-    for(const b of RESEARCH_BRANCHES){
-      for(const n of b.nodes){
-        if(res[n.id]){
-          const e = n.effects || {};
+    const eff = { yield:0, growth:0, quality:0, pest:0, water:0, cost:0, pest_mold:0, growthTime:0, priceMult:0, nutrientCost:0 };
+    for(const branchKey in RESEARCH_TREE){
+      const branch = RESEARCH_TREE[branchKey];
+      for(const nodeKey in branch.nodes){
+        if(res[nodeKey]){
+          const e = branch.nodes[nodeKey].effects || {};
           eff.yield += e.yield||0;
           eff.growth += e.growth||0;
           eff.quality += e.quality||0;
@@ -2585,19 +3409,22 @@ try{
           eff.water += e.water||0;
           eff.cost += e.cost||0;
           eff.pest_mold += e.pest_mold||0;
+          eff.growthTime += e.growthTime||0;
+          eff.priceMult += e.priceMult||0;
+          eff.nutrientCost += e.nutrientCost||0;
         }
       }
     }
     return eff;
   }
 
-  function renderResearchV2(){
+  function renderResearch(){
     const wrap = document.getElementById('researchList');
     const availEl = document.getElementById('researchAvailable');
-    if(availEl) availEl.textContent = String(researchAvailableV2());
+    if(availEl) availEl.textContent = String(researchAvailable());
     if(!wrap) return;
     wrap.innerHTML = '';
-    const eff = researchEffectsV2();
+    const eff = researchEffects();
     const totals = document.createElement('div');
     totals.className = 'hint';
     totals.textContent = `Aktive Boni - Ertrag +${Math.round(eff.yield*100)}%, Wachstum +${Math.round(eff.growth*100)}%, Qualitaet +${Math.round(eff.quality*100)}%, Risiko -${Math.round(eff.pest*100)}%`;
@@ -2605,40 +3432,66 @@ try{
 
     const tree = document.createElement('div');
     tree.className = 'research-tree';
-    const activeId = window.__activeResearchBranch || RESEARCH_BRANCHES[0].id;
-    for(const b of RESEARCH_BRANCHES){
-      const ownedCount = b.nodes.filter(n => state.research?.[n.id]).length;
+    const activeId = window.__activeResearchBranch || Object.keys(RESEARCH_TREE)[0];
+    for(const branchKey in RESEARCH_TREE){
+      const b = RESEARCH_TREE[branchKey];
+      const ownedCount = Object.keys(b.nodes).filter(n => state.research?.[n]).length;
       const card = document.createElement('div');
-      card.className = 'branch-card' + (activeId===b.id?' active':'');
-      card.dataset.branch = b.id;
+      card.className = 'branch-card' + (activeId===branchKey?' active':'');
+      card.dataset.branch = branchKey;
       card.innerHTML = `
         <div class="branch-icon">${b.icon}</div>
         <div class="branch-name">${b.name}</div>
-        <div class="branch-progress">${ownedCount}/${b.nodes.length}</div>
+        <div class="branch-progress">${ownedCount}/${Object.keys(b.nodes).length}</div>
       `;
-      card.addEventListener('click', () => { window.__activeResearchBranch = b.id; renderResearchV2(); });
+      card.addEventListener('click', () => { window.__activeResearchBranch = branchKey; renderResearch(); });
       tree.appendChild(card);
     }
     wrap.appendChild(tree);
 
     const nodesWrap = document.createElement('div');
     nodesWrap.className = 'node-grid';
-    const active = RESEARCH_BRANCHES.find(x => x.id === (window.__activeResearchBranch || RESEARCH_BRANCHES[0].id));
-    for(const n of active.nodes){
-      const owned = !!(state.research && state.research[n.id]);
+    const active = RESEARCH_TREE[activeId];
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute('class', 'research-lines');
+    nodesWrap.appendChild(svg);
+
+    for(const nodeKey in active.nodes){
+      const n = active.nodes[nodeKey];
+      const owned = !!(state.research && state.research[nodeKey]);
+      const prereqOk = (n.requires||[]).every(id => state.research?.[id]);
       const node = document.createElement('div');
       node.className = 'node-card';
+      node.style.left = `${n.position.x}px`;
+      node.style.top = `${n.position.y}px`;
+      node.dataset.nodeId = nodeKey;
+
       node.innerHTML = `
         <div class="node-name">${n.name}</div>
-        <div class="node-desc">${formatResearchEffects(n.effects)}</div>
-        <button class="secondary" ${owned?'disabled':''} data-node="${n.id}">${owned?'Erforscht':'Freischalten ('+n.cost+')'}</button>
+        <div class="node-desc">${n.desc}</div>
+        <button class="secondary" ${owned?'disabled':''}>${owned?'Erforscht':'Freischalten ('+n.cost+')'}</button>
       `;
       const btn = node.querySelector('button');
       if(!owned){
-        btn.disabled = researchAvailableV2() < n.cost;
-        btn.addEventListener('click', () => buyResearchV2(n.id));
+        btn.disabled = researchAvailable() < n.cost || !prereqOk;
+        btn.addEventListener('click', () => buyResearch(nodeKey));
       }
       nodesWrap.appendChild(node);
+
+      if (n.requires && n.requires.length > 0) {
+        n.requires.forEach(reqId => {
+          const reqNode = active.nodes[reqId];
+          if (reqNode) {
+            const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+            line.setAttribute('x1', n.position.x + 50);
+            line.setAttribute('y1', n.position.y + 20);
+            line.setAttribute('x2', reqNode.position.x + 50);
+            line.setAttribute('y2', reqNode.position.y + 70);
+            line.setAttribute('stroke', '#555');
+            svg.appendChild(line);
+          }
+        });
+      }
     }
     wrap.appendChild(nodesWrap);
   }
@@ -2653,21 +3506,34 @@ try{
     if(e.pest) items.push(`Risiko -${Math.round(e.pest*100)}%`);
     if(e.pest_mold) items.push(`Schimmel -${Math.round(e.pest_mold*100)}%`);
     if(e.cost) items.push(`Kosten -${Math.round(e.cost*100)}%`);
-    return items.join(' � ');
+    if(e.growthTime) items.push(`Wachstumszeit +${Math.round(e.growthTime*100)}%`);
+    if(e.priceMult) items.push(`Preise +${Math.round(e.priceMult*100)}%`);
+    if(e.nutrientCost) items.push(`Düngekosten +${Math.round(e.nutrientCost*100)}%`);
+    return items.join(' Â· ');
   }
 
-  function buyResearchV2(id){
+  function buyResearch(id){
     let found = null;
-    for(const b of RESEARCH_BRANCHES){
-      const n = b.nodes.find(x=>x.id===id);
-      if(n){ found = n; break; }
+    let branchKey = null;
+    for(const bk in RESEARCH_TREE){
+        const branch = RESEARCH_TREE[bk];
+        if(branch.nodes[id]){
+            found = branch.nodes[id];
+            branchKey = bk;
+            break;
+        }
     }
+
     if(!found) return;
     if(state.research?.[id]) return;
-    if(researchAvailableV2() < found.cost){ showToast('Nicht genug Forschungspunkte.'); return; }
+
+    const prereqOk = (found.requires||[]).every(r=> state.research?.[r]);
+    if(!prereqOk){ showToast('Voraussetzungen fehlen.'); return; }
+
+    if(researchAvailable() < found.cost){ showToast('Nicht genug Forschungspunkte.'); return; }
     state.research = state.research || {};
     state.research[id] = 1;
-    renderResearchV2();
+    renderResearch();
     save();
   }
 
@@ -2759,4 +3625,5 @@ function showConfirm(title, text, okLabel, okClass, onOk, cancelLabel, onCancel)
 }
 
 })();
+
 
