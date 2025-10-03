@@ -1,0 +1,26 @@
+﻿  function treatPlant(slotIndex){
+    const plant = state.plants.find(p => p.slot === slotIndex);
+    if(!plant || !plant.pest){ showToast('Keine Schädlinge vorhanden.'); return; }
+    ensureConsumables();
+    const type = plant.pest.id;
+    if(type === 'mold' || type === 'root_rot' || type === 'leaf_rot'){
+      if(state.consumables.fungicide > 0){
+        state.consumables.fungicide -= 1;
+        plant.pest = null;
+        spawnBurst(slotIndex, '???', 6);
+      } else { showToast('Fungizid benötigt.'); return; }
+    } else if(type === 'mites' || type === 'thrips'){
+      if(state.consumables.spray > 0){
+        state.consumables.spray -= 1;
+        plant.pest = null;
+        spawnBurst(slotIndex, '???', 6);
+      } else if(state.consumables.beneficials > 0){
+        state.consumables.beneficials -= 1;
+        plant.pest = null;
+        spawnBurst(slotIndex, '??', 6);
+      } else { showToast('Keine Abwehr vorhanden.'); return; }
+    }
+    updateProgressBars();
+    renderConsumables();
+    save();
+  }

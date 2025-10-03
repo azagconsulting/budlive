@@ -1,0 +1,593 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>BudLife</title>
+    <meta name="description" content="Ein leichtgewichtiges Idle-Webgame im Cannabis-Farm-Stil." />
+    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/uicons-regular-rounded/css/uicons-regular-rounded.css">
+    <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/uicons-solid-rounded/css/uicons-solid-rounded.css">
+  </head>
+  <body class="with-sidebar">
+    <div class="ambient-orbs" aria-hidden="true">
+      <span class="orb"></span>
+      <span class="orb"></span>
+      <span class="orb"></span>
+    </div>
+    <header class="app-header">
+      <div class="title-wrap">
+        <img src="assets/logo.png" alt="BudLife Logo" class="logo-img" />
+        <h1>BudLife</h1>
+      </div>
+      <div class="header-right">
+        <div class="stat-pill" title="Aktueller Kontostand">
+          <span id="grams">0.00 g</span>
+        </div>
+        <div class="stat-pill" title="Bargeld">
+          <span id="cash"><span class="coin-text"><img src="assets/coin.png" alt="" class="coin-icon"> 0</span></span>
+        </div>
+        <div class="stat-pill" title="Level / Erfahrung">
+          <div style="display:flex;align-items:center;gap:8px;min-width:160px">
+            <span id="level">Lvl 1</span>
+            <div class="xp-bar"><div id="xpFill"></div></div>
+          </div>
+        </div>
+        <div class="stat-pill" title="Spielzeit">
+          <span id="gameClock">Jahr 1, Tag 1 06:00</span>
+        </div>
+        <div class="speed-controls" title="Zeittempo">
+          <select id="speedSelect">
+            <option value="0" selected> Pause</option>
+            <option value="0.5">0.5x</option>
+            <option value="1">1x</option>
+            <option value="2">2x</option>
+            <option value="7">7x (Premium)</option>
+          </select>
+        </div>
+        <div class="stat-pill warn" id="timeIssues" hidden>Keine Probleme</div>
+      </div>
+    </header>
+    <div id="announceBar" class="announce" hidden></div>
+
+    <nav id="sidebar" class="sidebar" aria-label="HauptmenÃ¼">
+      <button id="sidebarToggle" class="sidebar-toggle" aria-label="MenÃ¼ ein/aus">"</button>
+      <button class="tab-btn nav-btn active" data-tab="farm" title="Farm">
+        <i class="ico fi fi-sr-leaf" aria-hidden="true"></i><span class="label">Farm</span>
+      </button>
+      <button class="tab-btn nav-btn" data-tab="inventory" title="Inventar">
+        <i class="ico fi fi-sr-box-open" aria-hidden="true"></i><span class="label">Inventar</span>
+      </button>
+      <button class="tab-btn nav-btn" data-tab="trade" title="Growmarkt">
+        <i class="ico fi fi-sr-store-alt" aria-hidden="true"></i><span class="label">Growmarkt</span>
+      </button>
+      <button class="tab-btn nav-btn" data-tab="jobs" title="Jobs">
+        <i class="ico fi fi-sr-briefcase" aria-hidden="true"></i><span class="label">Jobs</span>
+      </button>
+
+      <button class="tab-btn nav-btn" data-tab="upgrades" title="Upgrades">
+        <i class="ico fi fi-sr-bolt" aria-hidden="true"></i><span class="label">Upgrades</span>
+      </button>
+      <button class="tab-btn nav-btn" data-tab="research" title="Forschung">
+        <i class="ico fi fi-sr-flask" aria-hidden="true"></i><span class="label">Forschung</span>
+      </button>
+      <button class="tab-btn nav-btn" data-tab="market" title="Handel">
+        <i class="ico fi fi-sr-exchange" aria-hidden="true"></i><span class="label">Handel</span>
+      </button>
+      <button class="tab-btn nav-btn" data-tab="estate" title="Immobilien">
+        <i class="ico fi fi-sr-buildings" aria-hidden="true"></i><span class="label">Immobilien</span>
+      </button>
+      <button class="tab-btn nav-btn" data-tab="stats" title="Statistiken">
+        <i class="ico fi fi-sr-chart-line-up" aria-hidden="true"></i><span class="label">Statistiken</span>
+      </button>
+      <button class="tab-btn nav-btn" data-tab="employees" title="Mitarbeiter">
+        <i class="ico fi fi-sr-users" aria-hidden="true"></i><span class="label">Mitarbeiter</span>
+      </button>
+      <button class="tab-btn nav-btn" data-tab="breeding" title="Kreuzung">
+        <i class="ico fi fi-sr-flask" aria-hidden="true"></i><span class="label">Kreuzung</span>
+      </button>
+      <button class="tab-btn nav-btn" data-tab="inbox" title="Nachrichten">
+        <i class="ico fi fi-sr-envelope" aria-hidden="true"></i><span class="label">Nachrichten</span>
+      </button>
+      <button class="tab-btn nav-btn" data-tab="settings" title="Einstellungen">
+        <i class="ico fi fi-sr-settings" aria-hidden="true"></i><span class="label">Einstellungen</span>
+      </button>
+    </nav>
+
+    <main>
+      <section id="tab-farm" class="tab active">
+        <div class="row summary">
+          <div class="summary-item">
+            <div class="label">Konto</div>
+            <div class="value" id="gramsBig">0.00 g</div>
+          </div>
+          <div class="summary-item">
+            <div class="label">Produktion</div>
+            <div class="value" id="perSecBig">0.00 g/s</div>
+          </div>
+          <div class="summary-item">
+            <div class="label">Haze-Punkte</div>
+            <div class="value" id="prestigePoints">0</div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-header">
+            <h2>dYOE+/- Grow Room</h2>
+            <div class="grow-controls">
+              <span class="hint">PlÃ¤tze: <span id="slotCount">0</span>/<span id="slotMax">0</span> * Erweitere deinen Raum im Tab Immobilien</span>
+            </div>
+          </div>
+          <div id="slots" class="slots"></div>
+        </div>
+      </section>
+
+      <section id="tab-trade" class="tab">
+        <div class="panel">
+          <div class="panel-header">
+            <h2>?? Growmarkt</h2>
+            <div class="shop-header-actions">
+              <div class="shop-tabs">
+                <button class="shop-tab active" data-shop-tab="seeds">?? Samen</button>
+                <button class="shop-tab" data-shop-tab="tools">?? Werkzeuge</button>
+                <button class="shop-tab" data-shop-tab="equipment">?? Ausr�stung</button>
+                <button class="shop-tab" data-shop-tab="consumables">?? Verbrauchsmaterial</button>
+              </div>
+              <button id="cartToggle" class="shop-cart-button" type="button" aria-haspopup="dialog" aria-expanded="false" aria-controls="cartModal">
+                <i class="fi fi-rr-shopping-cart"></i>
+                <span>Warenkorb</span>
+                <span id="cartCount" class="cart-count">0</span>
+              </button>
+            </div>
+          </div>
+          <div id="shop" class="shop-list">
+            <div id="shop-seeds" class="shop-category active"></div>
+            <div id="shop-tools" class="shop-category"></div>
+            <div id="shop-equipment" class="shop-category"></div>
+            <div id="shop-consumables" class="shop-category"></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="tab-market" class="tab">
+        <div class="panel">
+          <div class="panel-header">
+            <h2>Handel</h2>
+            <div class="shop-header-actions">
+              <div class="shop-tabs">
+                <button class="shop-tab market-tab active" data-market-tab="schwarzmarkt">Schwarzmarkt</button>
+                <button class="shop-tab market-tab" data-market-tab="apotheken">Apotheken beliefern</button>
+                <button class="shop-tab market-tab" data-market-tab="vertraege">Monatliche Verträge</button>
+              </div>
+            </div>
+          </div>
+
+          <div id="market-schwarzmarkt" class="market-category active">
+            <!-- Old content from Handel -->
+            <div class="panel">
+              <div class="market">
+                <div class="market-row">
+                  <div>Basispreis: <strong id="basePrice">--</strong></div>
+                  <div>Bonus: <strong id="saleMult">x1.00</strong></div>
+                  <div>Qualitaet: <strong id="qualityMult">x1.00</strong></div>
+                  <div>Effektiver Preis: <strong id="effectivePrice">--</strong></div>
+                </div>
+                <div class="market-actions">
+                  <button id="sell10" class="secondary">10 g verkaufen</button>
+                  <button id="sell100" class="secondary">100 g verkaufen</button>
+                  <button id="sellMax" class="accent">50% verkaufen</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="panel">
+              <div class="panel-header">
+                <h2>NPC-AuftrÃ¤ge</h2>
+                <span class="hint">Spezielle Lieferanfragen mit Bonus</span>
+              </div>
+              <div id="ordersList" class="offer-list"></div>
+            </div>
+
+            <div class="panel">
+              <div class="panel-header">
+                <h2>Anfragen</h2>
+                <span class="hint">Zeitlich begrenzte Kaufangebote</span>
+              </div>
+              <div id="offerList" class="offer-list"></div>
+            </div>
+          </div>
+
+          <div id="market-apotheken" class="market-category">
+            <!-- New content for Apotheken -->
+            <div class="panel">
+                <div class="panel-header">
+                    <h2>Apotheken</h2>
+                    <span class="hint">Beliefern Sie Apotheken mit hochwertigem Cannabis. VerfÃ¼gbar ab Level 4.</span>
+                </div>
+                <div id="apothekenList" class="offer-list">
+                    <!-- Pharmacy offers will be dynamically inserted here -->
+                    <div class="placeholder">Dieses Feature wird mit Level 4 freigeschaltet.</div>
+                </div>
+            </div>
+          </div>
+
+          <div id="market-vertraege" class="market-category">
+            <!-- Monatliche Verträge -->
+            <div class="panel">
+                <div class="panel-header">
+                    <h2>Monatliche Verträge</h2>
+                    <span class="hint">Schließe Verträge mit Apotheken ab für monatliche Lieferungen. VerfÃ¼gbar ab Level 6.</span>
+                </div>
+                <div id="vertraegeList" class="jobs-grid">
+                    <!-- Verträge will be dynamically inserted here -->
+                    <div class="placeholder">Dieses Feature wird mit Level 6 freigeschaltet.</div>
+                </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="tab-jobs" class="tab">
+        <div class="panel">
+          <div class="panel-header">
+            <h2>Jobs</h2>
+            <span class="hint">Bewirb dich und verdiene monatlich Geld</span>
+          </div>
+          <div id="jobsList" class="jobs-grid"></div>
+        </div>
+      </section>
+
+      <section id="tab-inbox" class="tab">
+        <div class="panel">
+          <div class="panel-header">
+            <h2>Nachrichten</h2>
+            <span class="hint">Bewerbungen, Events und Systemmeldungen</span>
+          </div>
+          <div id="messagesList" class="message-list"></div>
+        </div>
+      </section>
+
+      <section id="tab-inventory" class="tab">
+        <div class="panel">
+          <div class="panel-header">
+            <h2>Inventar</h2>
+            <span class="hint">Verwalte deine GegenstÃ¤nde</span>
+          </div>
+          <div id="inventoryList" class="inventory-list"></div>
+        </div>
+      </section>
+
+      <section id="tab-estate" class="tab">
+        <div class="panel">
+          <div class="panel-header">
+            <h2>Immobilienmakler</h2>
+            <span class="hint">Upgrade deinen Grow-Raum</span>
+          </div>
+          <div id="estateList" class="estate-grid"></div>
+        </div>
+      </section>
+
+      <section id="tab-upgrades" class="tab">
+        <div class="panel">
+          <div class="panel-header">
+            <h2>sTM Globale Upgrades</h2>
+            <span class="hint">Verbessert alle Pflanzen</span>
+          </div>
+          <div id="globalUpgrades" class="upgrade-list"></div>
+        </div>
+      </section>
+
+      <section id="tab-research" class="tab">
+        <div class="panel">
+          <div class="panel-header">
+            <h2>Forschung</h2>
+            <span class="hint">Baue deine Infrastruktur aus</span>
+          </div>
+          <div class="settings-row">
+            <div>VerfÃ¼gbare Punkte: <strong id="researchAvailable">0</strong></div>
+          </div>
+          <div id="researchList" class="research-list"></div>
+        </div>
+      </section>
+
+      <section id="tab-stats" class="tab">
+        <div class="panel">
+          <div class="panel-header">
+            <h2>dY"s Statistiken</h2>
+          </div>
+          <div class="stats-grid">
+            <div class="stat">
+              <div class="label">Lebenszeit-Ertrag</div>
+              <div class="value" id="lifetimeTotal">0.00 g</div>
+            </div>
+            <div class="stat">
+              <div class="label">Beste Produktion</div>
+              <div class="value" id="bestPerSec">0.00 g/s</div>
+            </div>
+            <div class="stat">
+              <div class="label">Pflanzen gesamt</div>
+              <div class="value" id="plantCount">0</div>
+            </div>
+            <div class="stat">
+              <div class="label">Spielzeit</div>
+              <div class="value" id="playtime">0:00:00</div>
+            </div>
+            <div class="stat">
+              <div class="label">Resets</div>
+              <div class="value" id="resetCount">0</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="tab-employees" class="tab">
+        <div class="panel">
+          <div class="panel-header">
+            <h2>Mitarbeiter</h2>
+            <span class="hint">Stelle Angestellte ein, um Aufgaben zu automatisieren</span>
+          </div>
+          <div id="employeesList" class="upgrade-list"></div>
+        </div>
+      </section>
+
+      <section id="tab-breeding" class="tab">
+        <div class="panel">
+          <div class="panel-header">
+            <h2>Kreuzungslabor</h2>
+            <span class="hint">Setze Samen in Slots und kreuze sie</span>
+          </div>
+          <div id="breedingInterface" class="breeding-interface">
+            <div class="breeding-selection">
+              <div class="breeding-parent" id="parent1Slot">
+                <h3>Elternteil 1</h3>
+                <div class="breeding-slot empty" data-parent="1">
+                  <div class="slot-label">Samen setzen</div>
+                </div>
+              </div>
+              <div class="breeding-cross">+</div>
+              <div class="breeding-parent" id="parent2Slot">
+                <h3>Elternteil 2</h3>
+                <div class="breeding-slot empty" data-parent="2">
+                  <div class="slot-label">Samen setzen</div>
+                </div>
+              </div>
+              <div class="breeding-arrow">→</div>
+              <div class="breeding-result" id="breedingResult">
+                <h3>Neue Sorte</h3>
+                <div id="resultPreview">Kreuze zwei Sorten</div>
+              </div>
+            </div>
+            <button id="breedBtn" class="accent" disabled>Kreuzen (kostenlos)</button>
+          </div>
+        </div>
+      </section>
+
+      <section id="tab-settings" class="tab">
+        <div class="panel">
+          <div class="panel-header">
+            <h2>sTM Einstellungen</h2>
+            <span class="hint">Passe Schwierigkeit und Balance an</span>
+          </div>
+          <div class="settings">
+            <div class="settings-row">
+              <div class="label">Theme</div>
+              <label class="toggle">
+                <input id="themeToggle" type="checkbox" />
+                <span class="slider" title="Dark Mode umschalten"></span>
+              </label>
+            </div>
+            <div class="settings-row">
+              <div class="label">Schwierigkeitsgrad</div>
+              <div class="chips">
+                <button class="chip" id="diffEasy" data-diff="easy">Leicht</button>
+                <button class="chip" id="diffNormal" data-diff="normal">Normal</button>
+                <button class="chip" id="diffHard" data-diff="hard">Schwer</button>
+              </div>
+            </div>
+            <div class="settings-row small">
+              <div>Wachstum: <span id="diffGrowth">x1.00</span> * SchÃ¤dling: <span id="diffPest">x1.00</span></div>
+            </div>
+            <div class="settings-row">
+              <button id="hardResetBtn" class="ghost Duenger">Hard Reset (alle Daten lÃ¶schen)</button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <aside id="rightPanel" class="right-panel">
+      <div class="right-panel-content">
+        <div id="panel-quests" class="panel-section active">
+          <h3>Quests</h3>
+          <div id="questListRight" class="quest-list"></div>
+        </div>
+        <div class="mini-hud">
+          <button class="mini-btn" data-quest-action="goto-farm" title="Farm"><i class="fi fi-sr-leaf"></i></button>
+          <button class="mini-btn" data-quest-action="goto-shop" title="Shop"><i class="fi fi-sr-store-alt"></i></button>
+          <button class="mini-btn" data-quest-action="goto-jobs" title="Jobs"><i class="fi fi-sr-briefcase"></i></button>
+          <button class="mini-btn" data-quest-action="start-time" title="Zeit starten"><i class="fi fi-sr-play"></i></button>
+        </div>
+        <div class="panel-tabs">
+          <button class="panel-tab active" data-panel-tab="news">Neuigkeiten</button>
+          <button class="panel-tab" data-panel-tab="shop">Premium Shop</button>
+          <button class="panel-tab" data-panel-tab="events">Events</button>
+          <button class="panel-tab" data-panel-tab="quests">Quests</button>
+        </div>
+        <div class="panel-content">
+          <div id="panel-news" class="panel-section active">
+            <h3>📰 Neuigkeiten</h3>
+            <div id="newsFeed" class="news-feed">
+              <div class="news-item">Willkommen im erweiterten Cannabis Idle Farm!</div>
+              <div class="news-item">Neue Mitarbeiter und Kreuzungssystem verfügbar!</div>
+              <div class="news-item">Stelle Angestellte ein und automatisiere deine Farm.</div>
+            </div>
+          </div>
+          <div id="panel-shop" class="panel-section">
+            <h3>💎 Premium Shop</h3>
+            <div id="premiumShop" class="premium-shop">
+              <div class="premium-item">
+                <div class="item-icon">⚡</div>
+                <div class="item-info">
+                  <div class="item-name">Premium Boost</div>
+                  <div class="item-desc">2x Geschwindigkeit für 1 Stunde</div>
+                </div>
+                <button class="premium-btn"><span class="coin-text"><img src="assets/coin.png" alt="" class="coin-icon"> 4.99</span></button>
+              </div>
+              <div class="premium-item">
+                <div class="item-icon">🌿</div>
+                <div class="item-info">
+                  <div class="item-name">Mega Harvest</div>
+                  <div class="item-desc">Verdopple alle Erträge für 30 Min</div>
+                </div>
+                <button class="premium-btn"><span class="coin-text"><img src="assets/coin.png" alt="" class="coin-icon"> 2.99</span></button>
+              </div>
+              <div class="premium-item">
+                <div class="item-icon">🌱</div>
+                <div class="item-info">
+                  <div class="item-name">Golden Seeds</div>
+                  <div class="item-desc">10 zufällige Samen</div>
+                </div>
+                <button class="premium-btn"><span class="coin-text"><img src="assets/coin.png" alt="" class="coin-icon"> 1.99</span></button>
+              </div>
+            </div>
+          </div>
+          <div id="panel-events" class="panel-section active">
+            <h3>🎉 Events</h3>
+            <div id="eventsList" class="events-list">
+              <div class="event-item">Grow-Wettbewerb: Höchster Ertrag gewinnt!</div>
+              <div class="event-item">Saisonale Kreuzung: Spezielle Belohnungen</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <button id="rightPanelToggle" class="right-panel-toggle" title="Premium Panel schliessen" aria-expanded="true">
+      <span class="live-dot"></span>
+      <i class="ico fi fi-sr-angle-left"></i>
+    </button>
+
+    <template id="tpl-plant-card">
+      <div class="plant-card">
+        <div class="plant-media" data-media>
+          <img data-phase-img alt="Pflanzenphase" />
+          <div class="media-fallback" data-media-fallback>--</div>
+        </div>
+        <div class="plant-header">
+          <div class="plant-left">
+            <div class="plant-icon" data-icon>--</div>
+            <div>
+              <div class="plant-name" data-name>Strain</div>
+              <div class="plant-level">Level <span data-level>1</span></div>
+            </div>
+          </div>
+          <div class="plant-meta">
+            <div class="plant-timer" title="Zeit bis Ernte">Timer <span data-timer>--:--</span></div>
+            <div class="plant-health">VitalitÃ¤t <span data-health>100%</span></div>
+          </div>
+          <div class="plant-prod" title="Ertrag je Ernte">
+            <span data-yield>0</span> g
+          </div>
+        </div>
+        <div class="pest-badge" data-pest title="Gesund"></div>
+        <div class="plant-status" data-status>Bereit</div>
+        <div class="progress" title="Wachstum">
+          <div class="progress-bar" data-progress style="width: 0%"></div>
+        </div>
+        <div class="water" title="Wasserstand">
+          <div class="water-bar" data-water style="width: 0%"></div>
+        </div>
+        <div class="nutrients" title="NÃ¤hrstofflevel">
+          <div class="nutrient-bar" data-nutrient style="width: 0%"></div>
+        </div>
+        <div class="plant-quality">Qualitaet: <span data-quality>Normal</span></div>
+        <div class="plant-hud">
+          <div class="hud-actions">
+            <div class="hud-left">
+              <button class="icon-btn" data-harvest aria-label="Ernten" title="Ernten"><i class="fi fi-sr-scissors"></i></button>
+              <button class="icon-btn" data-water-btn aria-label="Wässern" title="Wässern"><i class="fi fi-sr-raindrops"></i></button>
+              <button class="icon-btn" data-feed-btn aria-label="Düngen" title="Düngen"><i class="fi fi-sr-flask"></i></button>
+              <button class="icon-btn" data-pest-btn aria-label="Abwehr" title="Abwehr"><i class="fi fi-sr-bug"></i></button>
+              <button class="icon-btn" data-upgrade aria-label="Upgrade" title="Upgrade (Kosten)"><i class="fi fi-sr-level-up-alt"></i><span data-upgrade-cost style="display:none">0</span></button>
+            </div>
+            <div class="hud-right">
+              <button class="icon-btn danger" data-remove aria-label="Entfernen" title="Entfernen">
+                <i class="fi fi-sr-trash"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="floating-container" data-fx></div>
+      </div>
+    </template>
+
+    <!-- Warenkorb Modal -->
+    <div id="cartModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="cartTitle" hidden>
+      <div class="modal-card cart-modal-card">
+        <button id="cartClose" class="ghost cart-close" type="button" aria-label="Schließen">
+          <i class="fi fi-rr-cross-small"></i>
+        </button>
+        <div class="cart-panel">
+          <div class="cart-header">
+            <h3 id="cartTitle">Warenkorb</h3>
+            <span class="hint">Sammle Produkte und kaufe gesammelt</span>
+          </div>
+          <div id="cartList" class="cart-list empty">
+            <div class="cart-empty">Warenkorb leer</div>
+          </div>
+          <div class="cart-footer">
+            <div class="cart-total">
+              <span>Gesamt:</span>
+              <span id="cartTotal">0</span>
+            </div>
+            <div class="cart-actions">
+              <button id="cartClear" class="ghost" type="button" disabled>Leeren</button>
+              <button id="cartCheckout" class="accent" type="button" disabled>Jetzt kaufen</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Seed Auswahl Modal -->
+    <div id="seedModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="seedTitle" hidden>
+      <div class="modal-card">
+        <h3 id="seedTitle">Samen auswÃ¤hlen</h3>
+        <div id="seedList" class="shop-list"></div>
+        <div class="modal-actions">
+          <button id="seedCancel" class="secondary">Abbrechen</button>
+          <button id="seedConfirm" class="accent" >Pflanzen</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- BestÃ¤tigungs-Modal -->
+    <div id="confirmModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="confirmTitle" hidden>
+      <div class="modal-card">
+        <h3 id="confirmTitle">BestÃ¤tigen</h3>
+        <p id="confirmText">Bist du sicher?</p>
+        <div class="modal-actions">
+          <button id="confirmCancel" class="secondary">Abbrechen</button>
+          <button id="confirmOk" class="Duenger">OK</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+
+    <!-- Welcome Modal -->
+    <div id="welcomeModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="welcomeTitle" aria-describedby="welcomeText" hidden>
+      <div class="modal-card">
+        <h3 id="welcomeTitle">Willkommen im Spiel!</h3>
+        <p id="welcomeText">Willkommen im Spiel mein kleiner lieber Robin du weisst das ist nur ein Test als laber net rum und mach. Du erhältst <img style="width: 17px;" src="assets/coin.png" alt="" class="coin-icon"> 250 Startkapital.</p>
+        <div class="modal-actions">
+          <button id="welcomeOk" class="accent">Los geht's</button>
+        </div>
+      </div>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
+  </html>
+
